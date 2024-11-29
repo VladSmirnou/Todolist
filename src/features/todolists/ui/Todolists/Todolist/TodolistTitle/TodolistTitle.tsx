@@ -1,10 +1,16 @@
 import { EditableSpan } from '@/common/components/EditableSpan/EditableSpan';
 
-export const TodolistTitle = () => {
+type Props = {
+    disabled: boolean;
+};
+
+export const TodolistTitle = (props: Props) => {
+    const { disabled } = props;
+
     return (
         <div>
             <EditableSpan />
-            <button>x</button>
+            <button disabled={disabled}>x</button>
         </div>
     );
 };
