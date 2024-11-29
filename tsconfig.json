@@ -29,6 +29,6 @@
 
         "esModuleInterop": true
     },
-    "include": ["src", "./jest.setup.ts"],
+    "include": ["src", "./jest.setup.ts", "src/main.tsx"],
     "references": [{ "path": "./tsconfig.node.json" }]
 }
