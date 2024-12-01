@@ -3,7 +3,7 @@ import { LoginForm } from './LoginForm/LoginForm';
 import { Title } from './Title/Title';
 
 export const LoginPage = () => {
-    const isLoggedIn = true;
+    const isLoggedIn = false;
 
     if (isLoggedIn) {
         return <Navigate to={'/'} />;
