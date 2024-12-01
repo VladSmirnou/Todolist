@@ -1,13 +1,21 @@
 import { Header } from '@/common/components/Header/Header';
 import { Loader } from '@/common/components/Loader/Loader';
 import { MessagePopup } from '@/common/components/MessagePopup/MessagePopup';
-import { useState } from 'react';
+import { useAppDispatch } from '@/common/hooks/useAppDispatch';
+import { me } from '@/features/auth/model/authSlice';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 export const App = () => {
+    const dispatch = useAppDispatch();
+
     const [meRequestIsFinished, setMeRequestIsFinished] =
-        useState<boolean>(true);
-    // MessagePopup для ошибки серверной валидации
+        useState<boolean>(false);
+
+    useEffect(() => {
+        dispatch(me()).finally(() => setMeRequestIsFinished(true));
+    }, [dispatch]);
+
     return meRequestIsFinished ?
             <section>
                 <Header />
