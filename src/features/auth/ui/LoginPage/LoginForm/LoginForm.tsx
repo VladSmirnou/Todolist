@@ -12,7 +12,11 @@ const defaultValues = {
 export const LoginForm = () => {
     const dispatch = useAppDispatch();
 
-    const { register, handleSubmit } = useForm<LoginFormData>({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isValid, isDirty },
+    } = useForm<LoginFormData>({
         defaultValues,
     });
 
@@ -22,10 +26,15 @@ export const LoginForm = () => {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            <input type="text" {...register('email')} />
-            <input type="password" {...register('password')} />
+            <input type="text" {...register('email', { required: true })} />
+            {errors.email && <p>{errors.email.message}</p>}
+            <input
+                type="password"
+                {...register('password', { required: true, minLength: 4 })}
+            />
+            {errors.password && <p>{errors.password.message}</p>}
             <input type="checkbox" {...register('rememberMe')} />
-            <button>login</button>
+            <button disabled={!isDirty || !isValid}>login</button>
         </form>
     );
 };
