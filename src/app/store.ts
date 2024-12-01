@@ -1,7 +1,13 @@
 import { configureStore, ThunkDispatch } from '@reduxjs/toolkit';
+import {
+    authSliceReducer,
+    name as auth,
+} from '@/features/auth/model/authSlice';
 
 export const store = configureStore({
-    reducer: {},
+    reducer: {
+        [auth]: authSliceReducer,
+    },
 });
 
 export type RootState = ReturnType<typeof store.getState>;

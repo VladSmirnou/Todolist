@@ -1,30 +1,29 @@
+import { useAppDispatch } from '@/common/hooks/useAppDispatch';
+import { LoginFormData } from '@/common/types/types';
+import { login } from '@/features/auth/model/authSlice';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
-type FormFields = {
-    username: string;
-    password: string;
-    rememberMe: boolean;
-};
-
 const defaultValues = {
-    username: '',
+    email: '',
     password: '',
     rememberMe: false,
 };
 
 export const LoginForm = () => {
-    const { register, handleSubmit } = useForm<FormFields>({
+    const dispatch = useAppDispatch();
+
+    const { register, handleSubmit } = useForm<LoginFormData>({
         defaultValues,
     });
 
-    const onSubmit: SubmitHandler<FormFields> = (data) => {
-        console.log(data);
+    const onSubmit: SubmitHandler<LoginFormData> = (data) => {
+        dispatch(login(data));
     };
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            <input type="text" {...register('username')} />
-            <input type="text" {...register('password')} />
+            <input type="text" {...register('email')} />
+            <input type="password" {...register('password')} />
             <input type="checkbox" {...register('rememberMe')} />
             <button>login</button>
         </form>
