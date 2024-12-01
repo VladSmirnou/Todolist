@@ -1,14 +1,39 @@
+import {
+    appStatusChanged,
+    appStatusTextSet,
+    selectAppStatus,
+    selectAppStatusText,
+} from '@/app/appSlice';
+import { useAppDispatch } from '@/common/hooks/useAppDispatch';
+import { useAppSelector } from '@/common/hooks/useAppSelector';
+
 export const MessagePopup = () => {
-    const appStatus = 'success' as 'error' | 'success';
+    const appStatus = useAppSelector(selectAppStatus);
+    const appStatusText = useAppSelector(selectAppStatusText);
+    const dispatch = useAppDispatch();
 
     let content;
 
-    if (appStatus === 'error') {
-        content = <p style={{ color: 'red' }}>ERROR!</p>;
-    }
-    if (appStatus === 'success') {
-        content = <p style={{ color: 'green' }}>OK!</p>;
+    if (appStatus === 'failed') {
+        content = (
+            <div>
+                <p style={{ color: 'red' }}>{appStatusText}</p>
+            </div>
+        );
     }
 
-    return <div>{content}</div>;
+    if (appStatus === 'succeeded') {
+        content = (
+            <div>
+                <p style={{ color: 'green' }}>{appStatusText}</p>;
+            </div>
+        );
+    }
+
+    setTimeout(() => {
+        dispatch(appStatusChanged('idle'));
+        dispatch(appStatusTextSet(''));
+    }, 3000);
+
+    return content;
 };
