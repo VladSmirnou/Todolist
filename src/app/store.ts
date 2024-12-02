@@ -1,4 +1,8 @@
-import { configureStore, ThunkDispatch } from '@reduxjs/toolkit';
+import {
+    combineReducers,
+    configureStore,
+    ThunkDispatch,
+} from '@reduxjs/toolkit';
 import {
     authSliceReducer,
     name as auth,
@@ -9,11 +13,19 @@ import {
     appStatusChanged,
     appStatusTextSet,
 } from './appSlice';
+import { tasksReducer } from '@/features/todolists/model/tasksSlice';
+import { todolistsReducer } from '@/features/todolists/model/todolistSlice';
+
+const todolistEntitiesReducer = combineReducers({
+    todolists: todolistsReducer,
+    tasks: tasksReducer,
+});
 
 export const store = configureStore({
     reducer: {
         [auth]: authSliceReducer,
         [app]: appSliceReducer,
+        todolistEntities: todolistEntitiesReducer,
     },
 });
 

@@ -2,14 +2,15 @@ import { EditableSpan } from '@/common/components/EditableSpan/EditableSpan';
 
 type Props = {
     disabled: boolean;
+    title: string;
 };
 
 export const TodolistTitle = (props: Props) => {
-    const { disabled } = props;
+    const { disabled, title } = props;
 
     return (
         <div>
-            <EditableSpan />
+            <EditableSpan spanText={title} />
             <button disabled={disabled}>x</button>
         </div>
     );

@@ -1,6 +1,12 @@
 import { AddItemForm } from '../AddItemForm/AddItemForm';
 
-export const EditableSpan = () => {
+type Props = {
+    spanText: string;
+};
+
+export const EditableSpan = (props: Props) => {
+    const { spanText } = props;
+
     const editing = false;
-    return editing ? <AddItemForm /> : <span>TodolistTitle</span>;
+    return editing ? <AddItemForm /> : <span>{spanText}</span>;
 };
