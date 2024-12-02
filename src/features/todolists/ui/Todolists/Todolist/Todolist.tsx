@@ -23,10 +23,15 @@ export const Todolist = (props: Props) => {
 
     const activeElementsDisabled = todolistStatus === 'deleting';
 
+    const addTask = (taskTitle: string) => {};
+
     return (
         <div style={{ border: '2px solid black' }}>
             <TodolistTitle title={title} disabled={activeElementsDisabled} />
-            <AddItemForm disabled={activeElementsDisabled} />
+            <AddItemForm
+                onAddItem={addTask}
+                disabled={activeElementsDisabled}
+            />
             <Tasks disabled={activeElementsDisabled} />
         </div>
     );
