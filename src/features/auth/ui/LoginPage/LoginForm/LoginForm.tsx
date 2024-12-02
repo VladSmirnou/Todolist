@@ -1,4 +1,6 @@
+import { selectAppStatus } from '@/app/appSlice';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
+import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { LoginFormData } from '@/common/types/types';
 import { login } from '@/features/auth/model/authSlice';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -11,17 +13,32 @@ const defaultValues = {
 
 export const LoginForm = () => {
     const dispatch = useAppDispatch();
+    const appStatus = useAppSelector(selectAppStatus);
 
     const {
         register,
         handleSubmit,
         formState: { errors, isValid, isDirty },
+        setError,
     } = useForm<LoginFormData>({
         defaultValues,
     });
 
     const onSubmit: SubmitHandler<LoginFormData> = (data) => {
-        dispatch(login(data));
+        dispatch(login(data))
+            .unwrap()
+            .catch(
+                (
+                    err: Array<{
+                        field: keyof LoginFormData;
+                        error: string;
+                    }>,
+                ) => {
+                    err.forEach(({ field, error }) => {
+                        setError(field, { type: 'custom', message: error });
+                    });
+                },
+            );
     };
 
     return (
@@ -34,7 +51,9 @@ export const LoginForm = () => {
             />
             {errors.password && <p>{errors.password.message}</p>}
             <input type="checkbox" {...register('rememberMe')} />
-            <button disabled={!isDirty || !isValid}>login</button>
+            <button disabled={!isDirty || !isValid || appStatus === 'pending'}>
+                login
+            </button>
         </form>
     );
 };
