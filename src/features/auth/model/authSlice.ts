@@ -1,6 +1,13 @@
+import {
+    type AppStatus,
+    appStatusChanged,
+    appStatusTextSet,
+} from '@/app/appSlice';
 import { instance } from '@/common/instance/instance';
-import { LoginFormData, Respose } from '@/common/types/types';
+import type { LoginFormData, Respose } from '@/common/types/types';
 import { createAppSlice } from '@/common/utils/createAppSlice/createAppSlice';
+import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
+import { AxiosError } from 'axios';
 
 const initialState = {
     isLoggedIn: false,
@@ -12,6 +19,15 @@ type MeResponseData = {
     login: string;
 };
 
+const dispatchAppStatusData = (
+    dispatch: ThunkDispatch<unknown, unknown, UnknownAction>,
+    status: AppStatus,
+    message: string,
+) => {
+    dispatch(appStatusChanged(status));
+    dispatch(appStatusTextSet(message));
+};
+
 const authSlice = createAppSlice({
     name: 'auth',
     initialState,
@@ -20,57 +36,73 @@ const authSlice = createAppSlice({
             async () => {
                 const res =
                     await instance.get<Respose<MeResponseData>>('/auth/me');
-                if (res.data.resultCode !== 0) {
-                    const errorMessage = res.data.messages[0];
-                    // dispatch error message
-                    return false;
-                }
-                return true;
+                return res.data.resultCode === 0;
             },
             {
                 fulfilled: (state, action) => {
                     state.isLoggedIn = action.payload;
                 },
-                rejected: (state, action) => {},
             },
         ),
         login: create.asyncThunk(
-            async (data: LoginFormData) => {
-                const res = await instance.post<
-                    Respose<{
-                        token: string;
-                        userId: number;
-                    }>
-                >('/auth/login', data);
-                if (res.data.resultCode !== 0) {
-                    const errorMessage = res.data.messages[0];
-                    // dispatch error message
+            async (data: LoginFormData, { dispatch }) => {
+                try {
+                    const res = await instance.post<
+                        Respose<{
+                            token: string;
+                            userId: number;
+                        }>
+                    >('/auth/login', data);
+                    if (res.data.resultCode !== 0) {
+                        const errorMessage = res.data.messages[0];
+                        dispatchAppStatusData(dispatch, 'failed', errorMessage);
+                        // use rejectWithValue(err.response.data) from here
+                        // https://redux-toolkit.js.org/api/createAsyncThunk#checking-errors-after-dispatching
+                        // to show the field error in the form
+                        return false;
+                    }
+                    localStorage.setItem('authToken', res.data.data.token);
+                    dispatch(appStatusChanged('succeeded'));
+                    return true;
+                } catch (e) {
+                    // AxiosError / Error -> e.message
+                    const errorMessage = (e as AxiosError | Error).message;
+                    dispatchAppStatusData(dispatch, 'failed', errorMessage);
                     return false;
                 }
-                localStorage.setItem('authToken', res.data.data.token);
-                return true;
             },
             {
                 fulfilled: (state, action) => {
                     state.isLoggedIn = action.payload;
                 },
-                rejected: (state, action) => {},
             },
         ),
         logout: create.asyncThunk(
-            async () => {
-                const res = await instance.delete<Respose>('/auth/login');
-                if (res.data.resultCode !== 0) {
-                    return true;
+            async (_, { dispatch }) => {
+                const userRemainsLoggedIn = true;
+                try {
+                    const res = await instance.delete<Respose>('/auth/login');
+                    if (res.data.resultCode !== 0) {
+                        dispatchAppStatusData(
+                            dispatch,
+                            'failed',
+                            'some error occured',
+                        );
+                        return userRemainsLoggedIn;
+                    }
+                    localStorage.removeItem('authToken');
+                    dispatch(appStatusChanged('succeeded'));
+                    return !userRemainsLoggedIn;
+                } catch (e) {
+                    const errorMessage = (e as AxiosError | Error).message;
+                    dispatchAppStatusData(dispatch, 'failed', errorMessage);
+                    return userRemainsLoggedIn;
                 }
-                localStorage.removeItem('authToken');
-                return false;
             },
             {
                 fulfilled: (state, action) => {
                     state.isLoggedIn = action.payload;
                 },
-                rejected: (state, action) => {},
             },
         ),
     }),
