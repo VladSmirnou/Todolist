@@ -27,7 +27,11 @@ export const Todolist = (props: Props) => {
 
     return (
         <div style={{ border: '2px solid black' }}>
-            <TodolistTitle title={title} disabled={activeElementsDisabled} />
+            <TodolistTitle
+                todolistId={todolistId}
+                title={title}
+                disabled={activeElementsDisabled}
+            />
             <AddItemForm
                 onAddItem={addTask}
                 disabled={activeElementsDisabled}

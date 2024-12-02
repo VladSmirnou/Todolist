@@ -11,4 +11,11 @@ export const todolistsApi = {
             title: todolistTitle,
         });
     },
+    removeTodolist: (todolistId: string) => {
+        return instance.delete<Respose>(`/todo-lists/${todolistId}`);
+    },
+    changeTodolist: (args: { todolistId: string; title: string }) => {
+        const { todolistId, title } = args;
+        return instance.put(`/todo-lists/${todolistId}`, { title });
+    },
 };

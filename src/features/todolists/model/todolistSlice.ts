@@ -26,11 +26,27 @@ const todolistsSlice = createAppSlice({
             },
             { fulfilled: todolistsAdapter.addOne },
         ),
+        removeTodolist: create.asyncThunk(
+            async (todolistId: string) => {
+                await todolistsApi.removeTodolist(todolistId);
+                return todolistId;
+            },
+            { fulfilled: todolistsAdapter.removeOne },
+        ),
+        updateTodolist: create.asyncThunk(
+            async (args: { todolistId: string; title: string }) => {
+                const { todolistId, title } = args;
+                await todolistsApi.changeTodolist(args);
+                return { id: todolistId, changes: { title } };
+            },
+            { fulfilled: todolistsAdapter.updateOne },
+        ),
     }),
 });
 
 export const { reducer: todolistsReducer } = todolistsSlice;
-export const { fetchTodolists, addTodolist } = todolistsSlice.actions;
+export const { fetchTodolists, addTodolist, removeTodolist, updateTodolist } =
+    todolistsSlice.actions;
 export const { selectIds, selectById } = todolistsAdapter.getSelectors(
     (state: RootState) => state.todolistEntities.todolists,
 );
