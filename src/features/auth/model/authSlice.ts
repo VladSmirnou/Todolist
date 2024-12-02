@@ -3,20 +3,14 @@ import {
     appStatusChanged,
     appStatusTextSet,
 } from '@/app/appSlice';
-import { instance } from '@/common/instance/instance';
-import type { LoginFormData, Respose } from '@/common/types/types';
+import type { LoginFormData } from '@/common/types/types';
 import { createAppSlice } from '@/common/utils/createAppSlice/createAppSlice';
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
+import { authApi } from '../api/auth-api';
 
 const initialState = {
     isLoggedIn: false,
-};
-
-type MeResponseData = {
-    id: number;
-    email: string;
-    login: string;
 };
 
 const dispatchAppStatusData = (
@@ -34,8 +28,7 @@ const authSlice = createAppSlice({
     reducers: (create) => ({
         me: create.asyncThunk(
             async () => {
-                const res =
-                    await instance.get<Respose<MeResponseData>>('/auth/me');
+                const res = await authApi.me();
                 return res.data.resultCode === 0;
             },
             {
@@ -47,12 +40,7 @@ const authSlice = createAppSlice({
         login: create.asyncThunk(
             async (data: LoginFormData, { dispatch, rejectWithValue }) => {
                 try {
-                    const res = await instance.post<
-                        Respose<{
-                            token: string;
-                            userId: number;
-                        }>
-                    >('/auth/login', data);
+                    const res = await authApi.login(data);
                     if (res.data.resultCode !== 0) {
                         if (res.data.fieldsErrors.length) {
                             return rejectWithValue(res.data.fieldsErrors);
@@ -80,7 +68,7 @@ const authSlice = createAppSlice({
             async (_, { dispatch }) => {
                 const userRemainsLoggedIn = true;
                 try {
-                    const res = await instance.delete<Respose>('/auth/login');
+                    const res = await authApi.logout();
                     if (res.data.resultCode !== 0) {
                         dispatchAppStatusData(
                             dispatch,
@@ -90,7 +78,6 @@ const authSlice = createAppSlice({
                         return userRemainsLoggedIn;
                     }
                     localStorage.removeItem('authToken');
-                    dispatch(appStatusChanged('succeeded'));
                     return !userRemainsLoggedIn;
                 } catch (e) {
                     const errorMessage = (e as AxiosError | Error).message;
