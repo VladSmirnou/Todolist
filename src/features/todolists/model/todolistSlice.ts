@@ -2,13 +2,7 @@ import { createAppSlice } from '@/common/utils/createAppSlice/createAppSlice';
 import { createEntityAdapter } from '@reduxjs/toolkit';
 import { todolistsApi } from '../api/todolistsApi';
 import { RootState } from '@/app/store';
-
-export type Todolist = {
-    addedDate: string;
-    id: string;
-    order: number;
-    title: string;
-};
+import type { Todolist } from '../util/types/todolist.types';
 
 const todolistsAdapter = createEntityAdapter<Todolist>({
     sortComparer: (a, b) => b.addedDate.localeCompare(a.addedDate),
@@ -25,11 +19,18 @@ const todolistsSlice = createAppSlice({
             },
             { fulfilled: todolistsAdapter.setAll },
         ),
+        addTodolist: create.asyncThunk(
+            async (todolistTitle: string) => {
+                const res = await todolistsApi.addTodolist(todolistTitle);
+                return res.data.data.item;
+            },
+            { fulfilled: todolistsAdapter.addOne },
+        ),
     }),
 });
 
 export const { reducer: todolistsReducer } = todolistsSlice;
-export const { fetchTodolists } = todolistsSlice.actions;
+export const { fetchTodolists, addTodolist } = todolistsSlice.actions;
 export const { selectIds, selectById } = todolistsAdapter.getSelectors(
     (state: RootState) => state.todolistEntities.todolists,
 );
