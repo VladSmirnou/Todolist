@@ -2,10 +2,22 @@ import { AddItemForm } from '@/common/components/AddItemForm/AddItemForm';
 import { TodolistTitle } from './TodolistTitle/TodolistTitle';
 import { Tasks } from './Tasks/Tasks';
 import { useState } from 'react';
+import { useAppSelector } from '@/common/hooks/useAppSelector';
+import { selectById } from '@/features/todolists/model/todolistSlice';
 
 type TodolistStatus = 'idle' | 'deleting';
 
-export const Todolist = () => {
+type Props = {
+    todolistId: string;
+};
+
+export const Todolist = (props: Props) => {
+    const { todolistId } = props;
+
+    const todolist = useAppSelector((state) => selectById(state, todolistId));
+
+    const { title } = todolist;
+
     const [todolistStatus, setTodolistStatus] =
         useState<TodolistStatus>('idle');
 
@@ -13,7 +25,7 @@ export const Todolist = () => {
 
     return (
         <div style={{ border: '2px solid black' }}>
-            <TodolistTitle disabled={activeElementsDisabled} />
+            <TodolistTitle title={title} disabled={activeElementsDisabled} />
             <AddItemForm disabled={activeElementsDisabled} />
             <Tasks disabled={activeElementsDisabled} />
         </div>
