@@ -43,14 +43,23 @@ export const LoginForm = () => {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            <input type="text" {...register('email', { required: true })} />
+            <input
+                type="text"
+                disabled={appStatus === 'pending'}
+                {...register('email', { required: true })}
+            />
             {errors.email && <p>{errors.email.message}</p>}
             <input
                 type="password"
+                disabled={appStatus === 'pending'}
                 {...register('password', { required: true, minLength: 4 })}
             />
             {errors.password && <p>{errors.password.message}</p>}
-            <input type="checkbox" {...register('rememberMe')} />
+            <input
+                disabled={appStatus === 'pending'}
+                type="checkbox"
+                {...register('rememberMe')}
+            />
             <button disabled={!isDirty || !isValid || appStatus === 'pending'}>
                 login
             </button>
