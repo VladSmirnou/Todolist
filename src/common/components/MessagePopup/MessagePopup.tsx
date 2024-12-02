@@ -25,7 +25,7 @@ export const MessagePopup = () => {
     if (appStatus === 'succeeded') {
         content = (
             <div>
-                <p style={{ color: 'green' }}>{appStatusText}</p>;
+                <p style={{ color: 'green' }}>{appStatusText}</p>
             </div>
         );
     }

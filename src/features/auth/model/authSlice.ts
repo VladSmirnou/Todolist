@@ -45,7 +45,7 @@ const authSlice = createAppSlice({
             },
         ),
         login: create.asyncThunk(
-            async (data: LoginFormData, { dispatch }) => {
+            async (data: LoginFormData, { dispatch, rejectWithValue }) => {
                 try {
                     const res = await instance.post<
                         Respose<{
@@ -54,15 +54,14 @@ const authSlice = createAppSlice({
                         }>
                     >('/auth/login', data);
                     if (res.data.resultCode !== 0) {
+                        if (res.data.fieldsErrors.length) {
+                            return rejectWithValue(res.data.fieldsErrors);
+                        }
                         const errorMessage = res.data.messages[0];
                         dispatchAppStatusData(dispatch, 'failed', errorMessage);
-                        // use rejectWithValue(err.response.data) from here
-                        // https://redux-toolkit.js.org/api/createAsyncThunk#checking-errors-after-dispatching
-                        // to show the field error in the form
                         return false;
                     }
                     localStorage.setItem('authToken', res.data.data.token);
-                    dispatch(appStatusChanged('succeeded'));
                     return true;
                 } catch (e) {
                     // AxiosError / Error -> e.message
