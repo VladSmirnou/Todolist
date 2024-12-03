@@ -34,3 +34,5 @@ export type NewTodolist = {
 export type NewTask = {
     item: Task;
 };
+
+export type FilterValue = 'all' | 'active' | 'completed';
