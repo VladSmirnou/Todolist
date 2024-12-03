@@ -4,29 +4,41 @@ import {
     removeTodolist,
     updateTodolist,
 } from '@/features/todolists/model/todolistSlice';
+import type { TodolistStatus } from '../Todolist';
 
 type Props = {
     disabled: boolean;
     title: string;
     todolistId: string;
+    onSetTodolistStatus: (nextStatus: TodolistStatus) => void;
 };
 
 export const TodolistTitle = (props: Props) => {
-    const { disabled, title, todolistId } = props;
+    const { disabled, title, todolistId, onSetTodolistStatus } = props;
 
     const dispatch = useAppDispatch();
 
     const deleteTodo = () => {
-        dispatch(removeTodolist(todolistId));
+        onSetTodolistStatus('deleting');
+        dispatch(removeTodolist(todolistId)).finally(() =>
+            onSetTodolistStatus('idle'),
+        );
     };
 
     const updateTodo = (title: string) => {
-        dispatch(updateTodolist({ todolistId, title }));
+        onSetTodolistStatus('updating');
+        dispatch(updateTodolist({ todolistId, title })).finally(() =>
+            onSetTodolistStatus('idle'),
+        );
     };
 
     return (
         <div>
-            <EditableSpan onEdit={updateTodo} spanText={title} />
+            <EditableSpan
+                onEdit={updateTodo}
+                spanText={title}
+                disabled={disabled}
+            />
             <button disabled={disabled} onClick={deleteTodo}>
                 x
             </button>
