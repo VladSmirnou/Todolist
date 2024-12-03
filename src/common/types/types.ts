@@ -1,4 +1,4 @@
-export type Respose<T = {}> = {
+export type Response<T = {}> = {
     resultCode: number;
     messages: Array<string>;
     fieldsErrors: Array<{ field: string; error: string }>;
