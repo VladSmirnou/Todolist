@@ -1,22 +1,17 @@
-import { AddItemForm } from '@/common/components/AddItemForm/AddItemForm';
-import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
-import { addTask } from '@/features/todolists/model/tasksSlice';
 import { selectById } from '@/features/todolists/model/todolistSlice';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Tasks } from './Tasks/Tasks';
 import { TodolistTitle } from './TodolistTitle/TodolistTitle';
 
-type TodolistStatus = 'idle' | 'deleting';
+export type TodolistStatus = 'idle' | 'updating' | 'deleting';
 
 type Props = {
     todolistId: string;
 };
 
-export const Todolist = (props: Props) => {
+export const Todolist = memo(function Todolist(props: Props) {
     const { todolistId } = props;
-
-    const dispatch = useAppDispatch();
 
     const todolist = useAppSelector((state) => selectById(state, todolistId));
 
@@ -25,24 +20,18 @@ export const Todolist = (props: Props) => {
     const [todolistStatus, setTodolistStatus] =
         useState<TodolistStatus>('idle');
 
-    const activeElementsDisabled = todolistStatus === 'deleting';
-
-    const addTaskCallBack = (title: string) => {
-        dispatch(addTask({ todolistId, title }));
-    };
+    const deletingTodolist = todolistStatus === 'deleting';
+    const changingTodolistTitle = todolistStatus === 'updating';
 
     return (
         <div style={{ border: '2px solid black' }}>
             <TodolistTitle
                 todolistId={todolistId}
                 title={title}
-                disabled={activeElementsDisabled}
+                disabled={deletingTodolist || changingTodolistTitle}
+                onSetTodolistStatus={setTodolistStatus}
             />
-            <AddItemForm
-                onAddItem={addTaskCallBack}
-                disabled={activeElementsDisabled}
-            />
-            <Tasks disabled={activeElementsDisabled} todolistId={todolistId} />
+            <Tasks disabled={deletingTodolist} todolistId={todolistId} />
         </div>
     );
-};
+});
