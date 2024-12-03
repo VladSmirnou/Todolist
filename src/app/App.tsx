@@ -17,10 +17,10 @@ export const App = () => {
     }, [dispatch]);
 
     return meRequestIsFinished ?
-            <section>
+            <>
                 <Header />
                 <Outlet />
                 <MessagePopup />
-            </section>
+            </>
         :   <Loader />;
 };

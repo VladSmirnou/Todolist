@@ -11,9 +11,9 @@ export const Main = () => {
     };
 
     return (
-        <div style={{ backgroundColor: 'yellow' }}>
+        <section style={{ backgroundColor: 'yellow' }}>
             <AddItemForm onAddItem={addTodo} />
             <Todolists />
-        </div>
+        </section>
     );
 };
