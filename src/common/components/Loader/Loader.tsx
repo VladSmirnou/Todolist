@@ -1,7 +1,7 @@
 export const Loader = () => {
     return (
         <div>
-            <p>loading</p>
+            <span>loading</span>
         </div>
     );
 };
