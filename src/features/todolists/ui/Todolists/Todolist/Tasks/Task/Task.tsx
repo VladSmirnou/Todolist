@@ -9,7 +9,7 @@ import {
 } from '@/features/todolists/model/tasksSlice';
 import { ChangeEvent, useState } from 'react';
 
-type TaskStatus = 'idle' | 'deleting' | 'changingStatus';
+type TaskStatus = 'idle' | 'deleting' | 'changingStatus' | 'changingTitle';
 
 type Props = {
     disabled: boolean;
@@ -17,7 +17,7 @@ type Props = {
 };
 
 export const Task = (props: Props) => {
-    const { disabled, taskId } = props;
+    const { disabled: deletingTodolist, taskId } = props;
 
     const dispatch = useAppDispatch();
     const [taskStatus, setTaskStatus] = useState<TaskStatus>('idle');
@@ -27,38 +27,50 @@ export const Task = (props: Props) => {
     const { title, status, todoListId } = task;
 
     const deletingTask = taskStatus === 'deleting';
+    const changingTaskStatus = taskStatus === 'changingStatus';
+    const changingTaskTitle = taskStatus === 'changingTitle';
+
+    const combinedCase = deletingTodolist || deletingTask;
 
     const handleStatusChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setTaskStatus('changingStatus');
         const nextStatus =
             e.target.checked ? TaskStatusCodes.Completed : TaskStatusCodes.New;
-        dispatch(updateTask({ task, newAttrValues: { status: nextStatus } }));
+        dispatch(
+            updateTask({ task, newAttrValues: { status: nextStatus } }),
+        ).finally(() => setTaskStatus('idle'));
     };
 
     const handleTitleChange = (nextTitle: string) => {
-        dispatch(updateTask({ task, newAttrValues: { title: nextTitle } }));
+        setTaskStatus('changingTitle');
+        dispatch(
+            updateTask({ task, newAttrValues: { title: nextTitle } }),
+        ).finally(() => setTaskStatus('idle'));
     };
 
     const handleDeleteTask = () => {
-        dispatch(removeTask({ taskId, todoListId }));
+        setTaskStatus('deleting');
+        dispatch(removeTask({ taskId, todoListId })).finally(() =>
+            setTaskStatus('idle'),
+        );
     };
 
     return (
-        <div>
+        <li>
             <input
-                disabled={
-                    disabled || taskStatus === 'changingStatus' || deletingTask
-                }
+                disabled={combinedCase || changingTaskStatus}
                 type="checkbox"
                 onChange={handleStatusChange}
                 checked={status === TaskStatusCodes.Completed}
             />
-            <EditableSpan spanText={title} onEdit={handleTitleChange} />
-            <button
-                disabled={disabled || deletingTask}
-                onClick={handleDeleteTask}
-            >
+            <EditableSpan
+                spanText={title}
+                onEdit={handleTitleChange}
+                disabled={combinedCase || changingTaskTitle}
+            />
+            <button disabled={combinedCase} onClick={handleDeleteTask}>
                 X
             </button>
-        </div>
+        </li>
     );
 };

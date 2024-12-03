@@ -2,7 +2,8 @@ import { RootState } from '@/app/store';
 import { createAppSlice } from '@/common/utils/createAppSlice/createAppSlice';
 import { createEntityAdapter } from '@reduxjs/toolkit';
 import { tasksApi } from '../api/tasksApi';
-import type { Task } from '../util/types/todolist.types';
+import type { FilterValue, Task } from '../util/types/todolist.types';
+import { TaskStatusCodes } from '@/common/enums/enums';
 
 const tasksAdapter = createEntityAdapter<Task>();
 
@@ -47,9 +48,7 @@ const tasksSlise = createAppSlice({
                 await tasksApi.removeTask(arg);
                 return arg.taskId;
             },
-            {
-                fulfilled: tasksAdapter.removeOne,
-            },
+            { fulfilled: tasksAdapter.removeOne },
         ),
     }),
 });
@@ -64,10 +63,27 @@ export const { selectIds, selectById, selectAll } = tasksAdapter.getSelectors(
 export const selectTasksIdsForTodolist = (
     state: RootState,
     todolistId: string,
+    filterValue: FilterValue,
 ) => {
     const taskEntities = selectAll(state);
     const res = taskEntities
-        .filter((task) => task.todoListId === todolistId)
+        .filter((task) => {
+            if (task.todoListId === todolistId) {
+                if (filterValue === 'all') {
+                    return true;
+                } else if (
+                    filterValue === 'active' &&
+                    task.status === TaskStatusCodes.New
+                ) {
+                    return true;
+                } else if (
+                    filterValue === 'completed' &&
+                    task.status === TaskStatusCodes.Completed
+                ) {
+                    return true;
+                }
+            }
+        })
         .map(({ id }) => id);
     return res;
 };

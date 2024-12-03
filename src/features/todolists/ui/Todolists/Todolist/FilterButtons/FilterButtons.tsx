@@ -1,15 +1,22 @@
-import { FilterValue } from '../Tasks/Tasks';
+import { FilterValue } from '@/features/todolists/util/types/todolist.types';
 
 type Props = {
     filterValue: FilterValue;
     disabled: boolean;
+    onFilterValueChange: (nextFilterValue: FilterValue) => void;
 };
 
 export const FilterButtons = (props: Props) => {
-    const { filterValue, disabled } = props;
+    const { filterValue, disabled, onFilterValueChange } = props;
+
+    const handleFilterValueChange = (nextFilterValue: FilterValue) => {
+        onFilterValueChange(nextFilterValue);
+    };
+
     return (
         <div>
             <button
+                onClick={() => handleFilterValueChange('all')}
                 disabled={disabled}
                 style={{
                     backgroundColor:
@@ -19,6 +26,7 @@ export const FilterButtons = (props: Props) => {
                 all
             </button>
             <button
+                onClick={() => handleFilterValueChange('active')}
                 disabled={disabled}
                 style={{
                     backgroundColor:
@@ -28,6 +36,7 @@ export const FilterButtons = (props: Props) => {
                 active
             </button>
             <button
+                onClick={() => handleFilterValueChange('completed')}
                 disabled={disabled}
                 style={{
                     backgroundColor:
