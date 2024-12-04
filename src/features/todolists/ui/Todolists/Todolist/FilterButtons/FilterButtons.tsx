@@ -1,4 +1,4 @@
-import { FilterValue } from '@/features/todolists/util/types/todolist.types';
+import { FilterValue } from '@/features/todolists/utils/types/todolist.types';
 
 type Props = {
     filterValue: FilterValue;

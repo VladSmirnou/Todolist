@@ -11,7 +11,7 @@ import { shallowEqual } from 'react-redux';
 import { FilterButtons } from '../FilterButtons/FilterButtons';
 import { TasksPagination } from '../TasksPagination/TasksPagination';
 import { Task } from './Task/Task';
-import type { FilterValue } from '@/features/todolists/util/types/todolist.types';
+import type { FilterValue } from '@/features/todolists/utils/types/todolist.types';
 
 type TasksStatus = 'idle' | 'loading' | 'success' | 'failure';
 
@@ -36,9 +36,10 @@ export const Tasks = (props: Props) => {
 
     const addTaskCallBack = (title: string) => {
         setTaskStatus('loading');
-        dispatch(addTask({ todolistId, title })).finally(() =>
-            setTaskStatus('success'),
-        );
+        dispatch(addTask({ todolistId, title }))
+            .unwrap()
+            .then(() => setTaskStatus('success'))
+            .catch(() => setTaskStatus('failure'));
     };
 
     const changeFilterValue = (nextFilterValue: FilterValue) => {
@@ -75,7 +76,7 @@ export const Tasks = (props: Props) => {
                 paginationPage={paginationPage}
             />
             <FilterButtons
-                disabled={disabled || taskIds.length === 0}
+                disabled={disabled}
                 filterValue={filterValue}
                 onFilterValueChange={changeFilterValue}
             />
