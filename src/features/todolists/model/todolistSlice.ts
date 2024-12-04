@@ -1,8 +1,11 @@
-import { createAppSlice } from '@/common/utils/createAppSlice/createAppSlice';
-import { createEntityAdapter } from '@reduxjs/toolkit';
-import { todolistsApi } from '../api/todolistsApi';
 import { RootState } from '@/app/store';
-import type { Todolist } from '../util/types/todolist.types';
+import { clientErrorHandler } from '@/common/utils/clientErrorHandler';
+import { createAppSlice } from '@/common/utils/createAppSlice';
+import { serverErrorHandler } from '@/common/utils/serverErrorHandler';
+import { createEntityAdapter } from '@reduxjs/toolkit';
+import { AxiosError } from 'axios';
+import { todolistsApi } from '../api/todolistsApi';
+import type { Todolist } from '../utils/types/todolist.types';
 
 type TodolistsStatus = 'idle' | 'loading' | 'success' | 'failure';
 
@@ -17,9 +20,14 @@ const todolistsSlice = createAppSlice({
     }),
     reducers: (create) => ({
         fetchTodolists: create.asyncThunk(
-            async () => {
-                const res = await todolistsApi.fetchTodolists();
-                return res.data;
+            async (_, { rejectWithValue }) => {
+                try {
+                    const res = await todolistsApi.fetchTodolists();
+                    return res.data;
+                } catch (e) {
+                    const errorMessage = (e as AxiosError | Error).message;
+                    return rejectWithValue(errorMessage);
+                }
             },
             {
                 pending: (state) => {
@@ -35,9 +43,15 @@ const todolistsSlice = createAppSlice({
             },
         ),
         addTodolist: create.asyncThunk(
-            async (todolistTitle: string) => {
-                const res = await todolistsApi.addTodolist(todolistTitle);
-                return res.data.data.item;
+            async (todolistTitle: string, { dispatch }) => {
+                try {
+                    const res = await todolistsApi.addTodolist(todolistTitle);
+                    serverErrorHandler(res.data);
+                    return res.data.data.item;
+                } catch (e) {
+                    const errorMessage = clientErrorHandler(e, dispatch);
+                    throw new Error(errorMessage);
+                }
             },
             {
                 pending: (state) => {
@@ -52,18 +66,35 @@ const todolistsSlice = createAppSlice({
                 },
             },
         ),
-        removeTodolist: create.asyncThunk(
-            async (todolistId: string) => {
-                await todolistsApi.removeTodolist(todolistId);
-                return todolistId;
+        removeTodolist: create.asyncThunk<string, string>(
+            // почему-то здесь он затребовал типизировать
+            // параметры в type параметрах, а сверху все нормально
+            async (todolistId, { dispatch }) => {
+                try {
+                    const res = await todolistsApi.removeTodolist(todolistId);
+                    serverErrorHandler(res.data);
+                    return todolistId;
+                } catch (e) {
+                    const errorMessage = clientErrorHandler(e, dispatch);
+                    throw new Error(errorMessage);
+                }
             },
             { fulfilled: todolistsAdapter.removeOne },
         ),
-        updateTodolist: create.asyncThunk(
-            async (args: { todolistId: string; title: string }) => {
+        updateTodolist: create.asyncThunk<
+            { id: string; changes: { title: string } },
+            { todolistId: string; title: string }
+        >(
+            async (args, { dispatch }) => {
                 const { todolistId, title } = args;
-                await todolistsApi.changeTodolist(args);
-                return { id: todolistId, changes: { title } };
+                try {
+                    const res = await todolistsApi.changeTodolist(args);
+                    serverErrorHandler(res.data);
+                    return { id: todolistId, changes: { title } };
+                } catch (e) {
+                    const errorMessage = clientErrorHandler(e, dispatch);
+                    throw new Error(errorMessage);
+                }
             },
             { fulfilled: todolistsAdapter.updateOne },
         ),
