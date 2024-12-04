@@ -8,23 +8,42 @@ import { AxiosError } from 'axios';
 import { tasksApi } from '../api/tasksApi';
 import type { FilterValue, Task } from '../utils/types/todolist.types';
 
-const tasksAdapter = createEntityAdapter<Task>();
+const tasksAdapter = createEntityAdapter<Task>({
+    // перенести сортировку в таски отдельно, чтобы не сортировать их все
+    // постоянно
+    sortComparer: (a, b) => a.order - b.order,
+});
 
 const tasksSlise = createAppSlice({
     name: 'tasks',
-    initialState: tasksAdapter.getInitialState(),
+    initialState: tasksAdapter.getInitialState({
+        tasksCountForTodolist: {} as { [key: string]: number },
+    }),
     reducers: (create) => ({
-        fetchTasks: create.asyncThunk<Array<Task>, string>(
-            async (todolistId: string, { rejectWithValue }) => {
+        fetchTasks: create.asyncThunk<
+            { todolistId: string; tasksCount: number; tasks: Array<Task> },
+            { todolistId: string; count: number; page: number }
+        >(
+            async (args, { rejectWithValue }) => {
                 try {
-                    const res = await tasksApi.fetchTasks(todolistId);
-                    return res.data.items;
+                    const res = await tasksApi.fetchTasks(args);
+                    return {
+                        tasksCount: res.data.totalCount,
+                        tasks: res.data.items,
+                        todolistId: args.todolistId,
+                    };
                 } catch (e) {
                     const errorMessage = (e as AxiosError | Error).message;
                     return rejectWithValue(errorMessage);
                 }
             },
-            { fulfilled: tasksAdapter.addMany },
+            {
+                fulfilled: (state, action) => {
+                    const { tasksCount, tasks, todolistId } = action.payload;
+                    state.tasksCountForTodolist[todolistId] = tasksCount;
+                    tasksAdapter.addMany(state, tasks);
+                },
+            },
         ),
         addTask: create.asyncThunk<Task, { todolistId: string; title: string }>(
             async (
@@ -40,7 +59,6 @@ const tasksSlise = createAppSlice({
                     throw new Error(errorMessage);
                 }
             },
-            { fulfilled: tasksAdapter.addOne },
         ),
         updateTask: create.asyncThunk(
             async (
@@ -95,20 +113,46 @@ const tasksSlise = createAppSlice({
             },
             { fulfilled: tasksAdapter.removeOne },
         ),
+        removeTasks: create.reducer<Array<string>>((state, action) => {
+            tasksAdapter.removeMany(state, action.payload);
+        }),
+        removeLocalTask: create.reducer<string>((state, action) => {
+            tasksAdapter.removeOne(state, action);
+        }),
     }),
+    selectors: {
+        selectTasksCount: (state, todolistId: string) =>
+            state.tasksCountForTodolist[todolistId],
+    },
 });
 
 export const { reducer: tasksReducer } = tasksSlise;
-export const { fetchTasks, addTask, updateTask, removeTask } =
-    tasksSlise.actions;
+export const {
+    fetchTasks,
+    addTask,
+    updateTask,
+    removeTask,
+    removeTasks,
+    removeLocalTask,
+} = tasksSlise.actions;
 export const { selectIds, selectById, selectAll } = tasksAdapter.getSelectors(
     (state: RootState) => state.todolistEntities.tasks,
 );
+export const { selectTasksCount } = tasksSlise.selectors;
 
-export const selectTasksIdsForTodolist = (
+export const selectTasksForTodolist = (
     state: RootState,
     todolistId: string,
+) => {
+    return selectAll(state)
+        .filter((task) => task.todoListId === todolistId)
+        .map(({ id }) => id);
+};
+
+export const selectFilteredTaskIdsForTodolist = (
+    state: RootState,
     filterValue: FilterValue,
+    todolistId: string,
 ) => {
     const taskEntities = selectAll(state);
     const res = taskEntities

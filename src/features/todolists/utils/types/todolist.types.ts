@@ -21,6 +21,8 @@ export type Task = {
     addedDate: string;
 };
 
+export type LocalTask = Task & { totalTasksCount: number };
+
 export type TasksData = {
     error: string | null;
     totalCount: number;

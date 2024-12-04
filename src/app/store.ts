@@ -13,7 +13,11 @@ import {
     appStatusChanged,
     appStatusTextSet,
 } from './appSlice';
-import { tasksReducer } from '@/features/todolists/model/tasksSlice';
+import {
+    removeLocalTask,
+    removeTasks,
+    tasksReducer,
+} from '@/features/todolists/model/tasksSlice';
 import { todolistsReducer } from '@/features/todolists/model/todolistSlice';
 
 const todolistEntitiesReducer = combineReducers({
@@ -33,9 +37,13 @@ export type RootState = ReturnType<typeof store.getState>;
 
 type AppActionType =
     | ReturnType<typeof appStatusChanged>
-    | ReturnType<typeof appStatusTextSet>;
-
+    | ReturnType<typeof appStatusTextSet>
+    | ReturnType<typeof removeTasks>
+    | ReturnType<typeof removeLocalTask>;
 // typeof store.dispatch returns ThunkDispatch<RootState, undefined, UnknownAction>
 // so I will be able to dispatch everything without any type checking
 // because of that I'll combine my reducer actions myself
 export type AppDispatch = ThunkDispatch<RootState, undefined, AppActionType>;
+
+//@ts-expect-error asd
+window.store = store;

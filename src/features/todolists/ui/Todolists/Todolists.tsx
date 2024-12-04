@@ -11,6 +11,9 @@ import {
 import { Todolist } from './Todolist/Todolist';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 
+const TASKS_PER_PAGE = 5;
+const INITIAL_PAGE = 1;
+
 export const Todolists = () => {
     const todolistsStatus = useAppSelector((state) =>
         selectTodolistsStatus(state.todolistEntities),
@@ -25,7 +28,13 @@ export const Todolists = () => {
             .unwrap()
             .then((todolists) => {
                 todolists.forEach(({ id }) => {
-                    dispatch(fetchTasks(id));
+                    dispatch(
+                        fetchTasks({
+                            todolistId: id,
+                            count: TASKS_PER_PAGE,
+                            page: INITIAL_PAGE,
+                        }),
+                    );
                 });
             })
             .catch((err: string) => {
