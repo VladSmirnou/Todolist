@@ -4,9 +4,6 @@ type Props = {
     disabled?: boolean;
     onAddItem: (itemName: string) => void;
 };
-// tasksStatus is common for all tasks,
-// but must be common only for one todolist
-// that these tasks belong to
 
 export const AddItemForm = (props: Props) => {
     const { disabled, onAddItem } = props;

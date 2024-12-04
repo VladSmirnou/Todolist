@@ -9,6 +9,7 @@ import {
     selectTodolistsStatus,
 } from '../../model/todolistSlice';
 import { Todolist } from './Todolist/Todolist';
+import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 
 export const Todolists = () => {
     const todolistsStatus = useAppSelector((state) =>
@@ -26,6 +27,9 @@ export const Todolists = () => {
                 todolists.forEach(({ id }) => {
                     dispatch(fetchTasks(id));
                 });
+            })
+            .catch((err: string) => {
+                dispatchAppStatusData(dispatch, 'failed', err);
             });
     }, [dispatch]);
 

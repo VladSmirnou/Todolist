@@ -1,6 +1,10 @@
 import { instance } from '@/common/instance/instance';
-import type { NewTask, Task, TasksData } from '../util/types/todolist.types';
 import { Response } from '@/common/types/types';
+import type {
+    NewTask,
+    TasksData,
+    UpdateModel,
+} from '../utils/types/todolist.types';
 
 export const tasksApi = {
     fetchTasks: (todolistId: string) => {
@@ -19,21 +23,12 @@ export const tasksApi = {
             `/todo-lists/${todoListId}/tasks/${taskId}`,
         );
     },
-    updateTask: (
-        task: Task,
-        newAttrValues: { status?: number; title?: string },
-    ) => {
-        const { todoListId, id } = task;
-        const payload = {
-            title: task.title,
-            description: task.description,
-            completed: task.completed,
-            status: task.status,
-            priority: task.priority,
-            startDate: task.startDate,
-            deadline: task.deadline,
-            ...newAttrValues,
-        };
+    updateTask: (data: {
+        todoListId: string;
+        id: string;
+        payload: UpdateModel;
+    }) => {
+        const { todoListId, id, payload } = data;
         return instance.put<Response<NewTask>>(
             `/todo-lists/${todoListId}/tasks/${id}`,
             payload,
