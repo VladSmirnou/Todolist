@@ -24,7 +24,7 @@ export const Task = (props: Props) => {
 
     const task = useAppSelector((state) => selectById(state, taskId));
 
-    const { title, status, todoListId } = task;
+    const { title, status, todoListId, id } = task;
 
     const deletingTask = taskStatus === 'deleting';
     const changingTaskStatus = taskStatus === 'changingStatus';
@@ -67,6 +67,7 @@ export const Task = (props: Props) => {
                 spanText={title}
                 onEdit={handleTitleChange}
                 disabled={combinedCase || changingTaskTitle}
+                navigateToLink={`/tasks/${id}`}
             />
             <button disabled={combinedCase} onClick={handleDeleteTask}>
                 X
