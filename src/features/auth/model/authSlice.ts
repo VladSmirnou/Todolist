@@ -1,25 +1,11 @@
-import {
-    type AppStatus,
-    appStatusChanged,
-    appStatusTextSet,
-} from '@/app/appSlice';
 import type { LoginFormData } from '@/common/types/types';
-import { createAppSlice } from '@/common/utils/createAppSlice/createAppSlice';
-import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
+import { createAppSlice } from '@/common/utils/createAppSlice';
 import { AxiosError } from 'axios';
 import { authApi } from '../api/auth-api';
+import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 
 const initialState = {
     isLoggedIn: false,
-};
-
-const dispatchAppStatusData = (
-    dispatch: ThunkDispatch<unknown, unknown, UnknownAction>,
-    status: AppStatus,
-    message: string,
-) => {
-    dispatch(appStatusChanged(status));
-    dispatch(appStatusTextSet(message));
 };
 
 const authSlice = createAppSlice({
