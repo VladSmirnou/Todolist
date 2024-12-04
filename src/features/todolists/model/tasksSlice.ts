@@ -1,9 +1,12 @@
 import { RootState } from '@/app/store';
-import { createAppSlice } from '@/common/utils/createAppSlice/createAppSlice';
-import { createEntityAdapter } from '@reduxjs/toolkit';
-import { tasksApi } from '../api/tasksApi';
-import type { FilterValue, Task } from '../util/types/todolist.types';
 import { TaskStatusCodes } from '@/common/enums/enums';
+import { clientErrorHandler } from '@/common/utils/clientErrorHandler';
+import { createAppSlice } from '@/common/utils/createAppSlice';
+import { serverErrorHandler } from '@/common/utils/serverErrorHandler';
+import { createEntityAdapter } from '@reduxjs/toolkit';
+import { AxiosError } from 'axios';
+import { tasksApi } from '../api/tasksApi';
+import type { FilterValue, Task } from '../utils/types/todolist.types';
 
 const tasksAdapter = createEntityAdapter<Task>();
 
@@ -11,30 +14,63 @@ const tasksSlise = createAppSlice({
     name: 'tasks',
     initialState: tasksAdapter.getInitialState(),
     reducers: (create) => ({
-        fetchTasks: create.asyncThunk(
-            async (todolistId: string) => {
-                const res = await tasksApi.fetchTasks(todolistId);
-                return res.data.items;
+        fetchTasks: create.asyncThunk<Array<Task>, string>(
+            async (todolistId: string, { rejectWithValue }) => {
+                try {
+                    const res = await tasksApi.fetchTasks(todolistId);
+                    return res.data.items;
+                } catch (e) {
+                    const errorMessage = (e as AxiosError | Error).message;
+                    return rejectWithValue(errorMessage);
+                }
             },
             { fulfilled: tasksAdapter.addMany },
         ),
-        addTask: create.asyncThunk(
-            async (args: { todolistId: string; title: string }) => {
-                const res = await tasksApi.addTask(args);
-                return res.data.data.item;
+        addTask: create.asyncThunk<Task, { todolistId: string; title: string }>(
+            async (
+                args: { todolistId: string; title: string },
+                { dispatch },
+            ) => {
+                try {
+                    const res = await tasksApi.addTask(args);
+                    serverErrorHandler(res.data);
+                    return res.data.data.item;
+                } catch (e) {
+                    const errorMessage = clientErrorHandler(e, dispatch);
+                    throw new Error(errorMessage);
+                }
             },
             { fulfilled: tasksAdapter.addOne },
         ),
         updateTask: create.asyncThunk(
-            async (arg: {
-                task: Task;
-                newAttrValues: { status?: number; title?: string };
-            }) => {
-                const res = await tasksApi.updateTask(
-                    arg.task,
-                    arg.newAttrValues,
-                );
-                return res.data.data.item;
+            async (
+                arg: {
+                    task: Task;
+                    newAttrValues: { status?: number; title?: string };
+                },
+                { dispatch },
+            ) => {
+                const { task, newAttrValues } = arg;
+                const { todoListId, id } = task;
+                const payload = {
+                    title: task.title,
+                    description: task.description,
+                    completed: task.completed,
+                    status: task.status,
+                    priority: task.priority,
+                    startDate: task.startDate,
+                    deadline: task.deadline,
+                    ...newAttrValues,
+                };
+                const data = { todoListId, id, payload };
+                try {
+                    const res = await tasksApi.updateTask(data);
+                    serverErrorHandler(res.data);
+                    return res.data.data.item;
+                } catch (e) {
+                    const errorMessage = clientErrorHandler(e, dispatch);
+                    throw new Error(errorMessage);
+                }
             },
             {
                 fulfilled: (state, action) => {
@@ -43,10 +79,19 @@ const tasksSlise = createAppSlice({
                 },
             },
         ),
-        removeTask: create.asyncThunk(
-            async (arg: { taskId: string; todoListId: string }) => {
-                await tasksApi.removeTask(arg);
-                return arg.taskId;
+        removeTask: create.asyncThunk<
+            string,
+            { taskId: string; todoListId: string }
+        >(
+            async (arg, { dispatch }) => {
+                try {
+                    const res = await tasksApi.removeTask(arg);
+                    serverErrorHandler(res.data);
+                    return arg.taskId;
+                } catch (e) {
+                    const errorMessage = clientErrorHandler(e, dispatch);
+                    throw new Error(errorMessage);
+                }
             },
             { fulfilled: tasksAdapter.removeOne },
         ),
