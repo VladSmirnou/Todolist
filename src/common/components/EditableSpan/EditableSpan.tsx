@@ -25,14 +25,13 @@ export const EditableSpan = (props: Props) => {
                 setTimeout(() => {
                     const clicks = clicksCount.current;
                     clicksCount.current = 0;
-                    if (clicks > 1) {
-                        if (!navigateToLink) {
-                            setInputText(spanText);
-                            setEditMode(true);
-                            return;
-                        } else {
-                            navigate(navigateToLink);
-                        }
+                    if (navigateToLink && clicks < 2) {
+                        navigate(navigateToLink);
+                        return;
+                    } else if (clicks >= 2) {
+                        setInputText(spanText);
+                        setEditMode(true);
+                        return;
                     }
                 }, 200);
             }

@@ -7,8 +7,11 @@ import type {
 } from '../utils/types/todolist.types';
 
 export const tasksApi = {
-    fetchTasks: (todolistId: string) => {
-        return instance.get<TasksData>(`/todo-lists/${todolistId}/tasks`);
+    fetchTasks: (data: { todolistId: string; count: number; page: number }) => {
+        const { todolistId, count, page } = data;
+        return instance.get<TasksData>(`/todo-lists/${todolistId}/tasks`, {
+            params: { count, page },
+        });
     },
     addTask: (args: { todolistId: string; title: string }) => {
         const { todolistId, title } = args;
