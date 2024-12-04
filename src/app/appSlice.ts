@@ -1,4 +1,4 @@
-import { createAppSlice } from '@/common/utils/createAppSlice/createAppSlice';
+import { createAppSlice } from '@/common/utils/createAppSlice';
 import { PayloadAction } from '@reduxjs/toolkit';
 
 export type AppStatus = 'idle' | 'failed' | 'succeeded' | 'pending';

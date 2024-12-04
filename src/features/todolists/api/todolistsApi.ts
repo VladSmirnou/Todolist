@@ -1,5 +1,5 @@
 import { instance } from '@/common/instance/instance';
-import type { NewTodolist, Todolist } from '../util/types/todolist.types';
+import type { NewTodolist, Todolist } from '../utils/types/todolist.types';
 import { Response } from '@/common/types/types';
 
 export const todolistsApi = {
@@ -16,6 +16,6 @@ export const todolistsApi = {
     },
     changeTodolist: (args: { todolistId: string; title: string }) => {
         const { todolistId, title } = args;
-        return instance.put(`/todo-lists/${todolistId}`, { title });
+        return instance.put<Response>(`/todo-lists/${todolistId}`, { title });
     },
 };
