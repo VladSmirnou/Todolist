@@ -11,3 +11,7 @@ export type LoginFormData = {
     rememberMe?: boolean;
     captcha?: string;
 };
+
+export type TaskIdParams = {
+    taskId: string;
+};

@@ -1,22 +1,42 @@
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 type Props = {
     spanText: string;
     onEdit: (newValue: string) => void;
     disabled?: boolean;
+    navigateToLink?: string;
 };
 
 export const EditableSpan = (props: Props) => {
-    const { spanText, onEdit, disabled } = props;
+    const { spanText, onEdit, disabled, navigateToLink } = props;
+
+    const navigate = useNavigate();
 
     const [inputText, setInputText] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [editMode, setEditMode] = useState(false);
 
-    const handleSetEditModeOn = () => {
+    const clicksCount = useRef(0);
+
+    const handleClick = () => {
         if (!disabled) {
-            setInputText(spanText);
-            setEditMode(true);
+            if (clicksCount.current === 0) {
+                setTimeout(() => {
+                    const clicks = clicksCount.current;
+                    clicksCount.current = 0;
+                    if (clicks > 1) {
+                        if (!navigateToLink) {
+                            setInputText(spanText);
+                            setEditMode(true);
+                            return;
+                        } else {
+                            navigate(navigateToLink);
+                        }
+                    }
+                }, 200);
+            }
+            clicksCount.current++;
         }
     };
 
@@ -46,7 +66,7 @@ export const EditableSpan = (props: Props) => {
                 {error && <p>{error}</p>}
             </div>
         :   <span
-                onDoubleClick={handleSetEditModeOn}
+                onClick={handleClick}
                 style={{ color: disabled ? 'gray' : 'black' }}
             >
                 {spanText}

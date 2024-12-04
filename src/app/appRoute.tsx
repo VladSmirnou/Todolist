@@ -3,6 +3,8 @@ import { App } from './App';
 import { LoginPage } from '@/features/auth/ui/LoginPage/LoginPage';
 import { Main } from './Main';
 import { ProtectedRoute } from './ProtectedRoute';
+import { SingleTaskPage } from '@/common/components/SingleTaskPage/SingleTaskPage';
+import { EditTaskForm } from '@/common/components/EditTaskForm/EditTaskForm';
 
 export const appRouter = createBrowserRouter([
     {
@@ -15,6 +17,14 @@ export const appRouter = createBrowserRouter([
                     {
                         index: true,
                         element: <Main />,
+                    },
+                    {
+                        path: 'tasks/:taskId',
+                        element: <SingleTaskPage />,
+                    },
+                    {
+                        path: 'update/:taskId',
+                        element: <EditTaskForm />,
                     },
                 ],
             },
