@@ -15,7 +15,8 @@ import {
 } from './appSlice';
 import {
     removeLocalTask,
-    removeTasks,
+    removeLocalOldestTaskForTodolist,
+    removeLocalTasks,
     tasksReducer,
 } from '@/features/todolists/model/tasksSlice';
 import { todolistsReducer } from '@/features/todolists/model/todolistSlice';
@@ -38,8 +39,9 @@ export type RootState = ReturnType<typeof store.getState>;
 type AppActionType =
     | ReturnType<typeof appStatusChanged>
     | ReturnType<typeof appStatusTextSet>
-    | ReturnType<typeof removeTasks>
-    | ReturnType<typeof removeLocalTask>;
+    | ReturnType<typeof removeLocalTask>
+    | ReturnType<typeof removeLocalTasks>
+    | ReturnType<typeof removeLocalOldestTaskForTodolist>;
 // typeof store.dispatch returns ThunkDispatch<RootState, undefined, UnknownAction>
 // so I will be able to dispatch everything without any type checking
 // because of that I'll combine my reducer actions myself

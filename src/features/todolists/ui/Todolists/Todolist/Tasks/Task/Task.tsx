@@ -3,6 +3,8 @@ import { TaskStatusCodes } from '@/common/enums/enums';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import {
+    fetchTasks,
+    removeLocalTask,
     removeTask,
     selectById,
     updateTask,
@@ -14,10 +16,13 @@ type TaskStatus = 'idle' | 'deleting' | 'changingStatus' | 'changingTitle';
 type Props = {
     disabled: boolean;
     taskId: string;
+    page: number;
 };
 
+const TASKS_PER_PAGE = 5;
+
 export const Task = (props: Props) => {
-    const { disabled: deletingTodolist, taskId } = props;
+    const { disabled: deletingTodolist, taskId, page } = props;
 
     const dispatch = useAppDispatch();
     const [taskStatus, setTaskStatus] = useState<TaskStatus>('idle');
@@ -48,11 +53,24 @@ export const Task = (props: Props) => {
         ).finally(() => setTaskStatus('idle'));
     };
 
-    const handleDeleteTask = () => {
+    const handleDeleteTask = async () => {
         setTaskStatus('deleting');
-        dispatch(removeTask({ taskId, todoListId })).finally(() =>
-            setTaskStatus('idle'),
-        );
+        try {
+            await dispatch(removeTask({ taskId, todoListId })).unwrap();
+            await dispatch(
+                fetchTasks({
+                    todolistId: todoListId,
+                    count: TASKS_PER_PAGE,
+                    page,
+                }),
+            ).unwrap();
+            // может быть дисинк с сервером, если запрос выше провалится
+            // тогда тудулист останется локально, но будет удален на сервере
+            dispatch(removeLocalTask(taskId));
+        } catch {
+            console.log('');
+        }
+        setTaskStatus('idle');
     };
 
     return (

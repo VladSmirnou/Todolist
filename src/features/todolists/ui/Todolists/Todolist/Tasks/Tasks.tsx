@@ -5,8 +5,8 @@ import { useAppSelector } from '@/common/hooks/useAppSelector';
 import {
     addTask,
     fetchTasks,
-    removeLocalTask,
-    removeTasks,
+    removeLocalOldestTaskForTodolist,
+    removeLocalTasks,
     selectFilteredTaskIdsForTodolist,
     selectTasksCount,
     selectTasksForTodolist,
@@ -60,7 +60,7 @@ export const Tasks = (props: Props) => {
         setFilterValue('all');
         setTaskStatus('loading');
         setPaginationPage(nextPage);
-        dispatch(removeTasks(taskIds));
+        dispatch(removeLocalTasks(taskIds));
         dispatch(
             fetchTasks({
                 todolistId,
@@ -71,26 +71,14 @@ export const Tasks = (props: Props) => {
     };
 
     const addTaskCallBack = (title: string) => {
-        // set new tasks and remove a local task with the biggest order
-        // which is always the first task in the sorted by order array
         setTaskStatus('loading');
         dispatch(addTask({ todolistId, title }))
             .unwrap()
             .then(() => {
-                return dispatch(
-                    fetchTasks({
-                        todolistId,
-                        count: TASKS_PER_PAGE,
-                        page: paginationPage,
-                    }),
-                )
-                    .unwrap()
-                    .then(() => {
-                        if (taskIds.length === TASKS_PER_PAGE) {
-                            dispatch(removeLocalTask(taskIds.at(0)!));
-                        }
-                        setTaskStatus('success');
-                    });
+                if (taskIds.length === TASKS_PER_PAGE) {
+                    dispatch(removeLocalOldestTaskForTodolist(taskIds.at(-1)!));
+                }
+                setTaskStatus('success');
             })
             .catch(() => setTaskStatus('failure'));
     };
@@ -108,7 +96,12 @@ export const Tasks = (props: Props) => {
                 <ul>
                     {filteredTaskIds.map((tId) => {
                         return (
-                            <Task key={tId} taskId={tId} disabled={disabled} />
+                            <Task
+                                key={tId}
+                                taskId={tId}
+                                disabled={disabled}
+                                page={paginationPage}
+                            />
                         );
                     })}
                 </ul>

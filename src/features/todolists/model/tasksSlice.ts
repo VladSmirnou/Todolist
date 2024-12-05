@@ -14,10 +14,29 @@ const tasksAdapter = createEntityAdapter<Task>({
     sortComparer: (a, b) => a.order - b.order,
 });
 
+// tasks from the server (order) [-4, -3, -2, -1, 0]
+// чем меньше цифра, тем раньше был добавлен таск
+// поэтому, т.к. addOne добавляет в конец, надо чтобы
+// массив сортировался по возрастанию, чтобы при добавлении
+// новой таски убирать .at(-1) (т.е. самый старый элемент) на другую
+// страницу.
+
+// tasks per page = 3
+// [1 2 3 4 (+ 11, 52, 63 for another todolist)] (on the server, doesn't exist locally)
+// remove task 3 on the server
+// [1 2 4 (+ 11, 52, 63 for another todolist)]
+// server request for todolist1 page 1 \ tasks per page 3 -> [1 2 4]
+// tasks locally -> [1 2 3 (+ 11, 52, 63 for another todolist)]
+// addMany
+// [1 2 [3 needs to be removed] [4 added] (+ 11, 52, 63 for another todolist)]
+// removing task 3 locally
+// page 1 becomes:
+// [1 2 4]
+
 const tasksSlise = createAppSlice({
     name: 'tasks',
     initialState: tasksAdapter.getInitialState({
-        tasksCountForTodolist: {} as { [key: string]: number },
+        tasksCountForTodolistOnServer: {} as { [key: string]: number },
     }),
     reducers: (create) => ({
         fetchTasks: create.asyncThunk<
@@ -40,12 +59,16 @@ const tasksSlise = createAppSlice({
             {
                 fulfilled: (state, action) => {
                     const { tasksCount, tasks, todolistId } = action.payload;
-                    state.tasksCountForTodolist[todolistId] = tasksCount;
+                    state.tasksCountForTodolistOnServer[todolistId] =
+                        tasksCount;
                     tasksAdapter.addMany(state, tasks);
                 },
             },
         ),
-        addTask: create.asyncThunk<Task, { todolistId: string; title: string }>(
+        addTask: create.asyncThunk<
+            { todoListId: string; task: Task },
+            { todolistId: string; title: string }
+        >(
             async (
                 args: { todolistId: string; title: string },
                 { dispatch },
@@ -53,11 +76,21 @@ const tasksSlise = createAppSlice({
                 try {
                     const res = await tasksApi.addTask(args);
                     serverErrorHandler(res.data);
-                    return res.data.data.item;
+                    return {
+                        todoListId: args.todolistId,
+                        task: res.data.data.item,
+                    };
                 } catch (e) {
                     const errorMessage = clientErrorHandler(e, dispatch);
                     throw new Error(errorMessage);
                 }
+            },
+            {
+                fulfilled: (state, action) => {
+                    const { todoListId, task } = action.payload;
+                    state.tasksCountForTodolistOnServer[todoListId]++;
+                    tasksAdapter.addOne(state, task);
+                },
             },
         ),
         updateTask: create.asyncThunk(
@@ -100,29 +133,25 @@ const tasksSlise = createAppSlice({
         removeTask: create.asyncThunk<
             string,
             { taskId: string; todoListId: string }
-        >(
-            async (arg, { dispatch }) => {
-                try {
-                    const res = await tasksApi.removeTask(arg);
-                    serverErrorHandler(res.data);
-                    return arg.taskId;
-                } catch (e) {
-                    const errorMessage = clientErrorHandler(e, dispatch);
-                    throw new Error(errorMessage);
-                }
-            },
-            { fulfilled: tasksAdapter.removeOne },
+        >(async (args, { dispatch }) => {
+            try {
+                const res = await tasksApi.removeTask(args);
+                serverErrorHandler(res.data);
+                return args.taskId;
+            } catch (e) {
+                const errorMessage = clientErrorHandler(e, dispatch);
+                throw new Error(errorMessage);
+            }
+        }),
+        removeLocalTasks: create.reducer(tasksAdapter.removeMany),
+        removeLocalTask: create.reducer(tasksAdapter.removeOne),
+        removeLocalOldestTaskForTodolist: create.reducer(
+            tasksAdapter.removeOne,
         ),
-        removeTasks: create.reducer<Array<string>>((state, action) => {
-            tasksAdapter.removeMany(state, action.payload);
-        }),
-        removeLocalTask: create.reducer<string>((state, action) => {
-            tasksAdapter.removeOne(state, action);
-        }),
     }),
     selectors: {
         selectTasksCount: (state, todolistId: string) =>
-            state.tasksCountForTodolist[todolistId],
+            state.tasksCountForTodolistOnServer[todolistId],
     },
 });
 
@@ -132,7 +161,8 @@ export const {
     addTask,
     updateTask,
     removeTask,
-    removeTasks,
+    removeLocalTasks,
+    removeLocalOldestTaskForTodolist,
     removeLocalTask,
 } = tasksSlise.actions;
 export const { selectIds, selectById, selectAll } = tasksAdapter.getSelectors(
