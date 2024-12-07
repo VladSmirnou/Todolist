@@ -22,6 +22,7 @@ import { shallowEqual } from 'react-redux';
 import { FilterButtons } from '../FilterButtons/FilterButtons';
 import { TasksPagination } from '../TasksPagination/TasksPagination';
 import { Task } from './Task/Task';
+import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 
 type TasksStatus = 'idle' | 'loading' | 'success' | 'failure';
 
@@ -65,37 +66,50 @@ export const Tasks = (props: Props) => {
         if (nextPage === paginationPage) {
             return;
         }
-        setFilterValue('all');
         setTaskStatus('loading');
-        dispatch(paginationPageChanged({ todolistId, nextPage }));
-        dispatch(removeLocalTasks(taskIds));
         dispatch(
             fetchTasks({
                 todolistId,
                 count: TASKS_PER_PAGE,
                 page: nextPage,
             }),
-        ).finally(() => setTaskStatus('idle'));
+        )
+            .unwrap()
+            .then(() => {
+                setTaskStatus('success');
+                setFilterValue('all');
+                dispatch(removeLocalTasks(taskIds));
+                dispatch(paginationPageChanged({ todolistId, nextPage }));
+            })
+            .catch((error: string) => {
+                dispatchAppStatusData(dispatch, 'failed', error);
+                setTaskStatus('failure');
+            });
     };
 
     const addTaskCallBack = async (title: string) => {
         setTaskStatus('loading');
-        await dispatch(addTask({ todolistId, title })).unwrap();
-        await dispatch(
-            fetchTasks({
-                todolistId,
-                count: TASKS_PER_PAGE,
-                page: paginationPage,
-            }),
-        )
-            .unwrap()
-            .then(() => {
-                if (taskIds.length === TASKS_PER_PAGE) {
-                    dispatch(removeLocalOldestTaskForTodolist(taskIds.at(-1)!));
-                }
-                setTaskStatus('success');
-            })
-            .catch(() => setTaskStatus('failure'));
+        try {
+            await dispatch(addTask({ todolistId, title })).unwrap();
+        } catch {
+            setTaskStatus('failure');
+            return;
+        }
+        try {
+            await dispatch(
+                fetchTasks({
+                    todolistId,
+                    count: TASKS_PER_PAGE,
+                    page: paginationPage,
+                }),
+            ).unwrap();
+            if (taskIds.length === TASKS_PER_PAGE) {
+                dispatch(removeLocalOldestTaskForTodolist(taskIds.at(-1)!));
+            }
+            setTaskStatus('success');
+        } catch {
+            setTaskStatus('failure');
+        }
     };
 
     const changeFilterValue = (nextFilterValue: FilterValue) => {
