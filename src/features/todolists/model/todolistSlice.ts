@@ -6,6 +6,7 @@ import { createEntityAdapter } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { todolistsApi } from '../api/todolistsApi';
 import type { Todolist } from '../utils/types/todolist.types';
+import { INITIAL_PAGE } from '../utils/constants/constants';
 
 type TodolistsStatus = 'idle' | 'loading' | 'success' | 'failure';
 
@@ -17,6 +18,8 @@ const todolistsSlice = createAppSlice({
     name: 'todolists',
     initialState: todolistsAdapter.getInitialState({
         todolistsStatus: 'idle' as TodolistsStatus,
+        tasksCountForTodolistOnServer: {} as { [key: string]: number },
+        paginationPageForTodolist: {} as { [key: string]: number },
     }),
     reducers: (create) => ({
         fetchTodolists: create.asyncThunk(
@@ -35,6 +38,18 @@ const todolistsSlice = createAppSlice({
                 },
                 fulfilled: (state, action) => {
                     state.todolistsStatus = 'success';
+                    action.payload.forEach(({ id }) => {
+                        // When I go to a single post page and back,
+                        // todolists component dismounts, so todolists
+                        // are gonna be refetched, but I still have them im my
+                        // local app memory and don't want to reset their pagination.
+                        // For ther initial load I need to
+                        // set their initial pagination anyway
+                        // Tasks count will be set after tasks are fetched
+                        if (!state.paginationPageForTodolist[id]) {
+                            state.paginationPageForTodolist[id] = INITIAL_PAGE;
+                        }
+                    });
                     todolistsAdapter.setAll(state, action);
                 },
                 rejected: (state) => {
@@ -58,7 +73,10 @@ const todolistsSlice = createAppSlice({
                     state.todolistsStatus = 'loading';
                 },
                 fulfilled: (state, action) => {
+                    const { id } = action.payload;
                     state.todolistsStatus = 'success';
+                    state.paginationPageForTodolist[id] = 1;
+                    state.tasksCountForTodolistOnServer[id] = 0;
                     todolistsAdapter.addOne(state, action);
                 },
                 rejected: (state) => {
@@ -79,7 +97,14 @@ const todolistsSlice = createAppSlice({
                     throw new Error(errorMessage);
                 }
             },
-            { fulfilled: todolistsAdapter.removeOne },
+            {
+                fulfilled: (state, action) => {
+                    const todolistId = action.payload;
+                    delete state.tasksCountForTodolistOnServer[todolistId];
+                    delete state.paginationPageForTodolist[todolistId];
+                    todolistsAdapter.removeOne(state, action);
+                },
+            },
         ),
         updateTodolist: create.asyncThunk<
             { id: string; changes: { title: string } },
@@ -98,13 +123,30 @@ const todolistsSlice = createAppSlice({
             },
             { fulfilled: todolistsAdapter.updateOne },
         ),
-        // paginationPageChanged: create.reducer<number>((state, action) => {
-        //     state.paginationPage = action.payload;
-        // }),
+        setTasksCount: create.reducer<{
+            todolistId: string;
+            tasksCount: number;
+        }>((state, action) => {
+            const { todolistId, tasksCount } = action.payload;
+            state.tasksCountForTodolistOnServer[todolistId] = tasksCount;
+        }),
+        paginationPageChanged: create.reducer<{
+            todolistId: string;
+            nextPage: number;
+        }>((state, action) => {
+            const { todolistId, nextPage } = action.payload;
+            state.paginationPageForTodolist[todolistId] = nextPage;
+        }),
+        serverTaskCountIncremented: create.reducer<string>((state, action) => {
+            state.tasksCountForTodolistOnServer[action.payload]++;
+        }),
     }),
     selectors: {
         selectTodolistsStatus: (state) => state.todolistsStatus,
-        // selectPaginationPage: (state) => state.paginationPage,
+        selectTasksCountForTodolistOnServer: (state, todolistId: string) =>
+            state.tasksCountForTodolistOnServer[todolistId],
+        selectPaginationPage: (state, todolistId: string) =>
+            state.paginationPageForTodolist[todolistId],
     },
 });
 
@@ -114,9 +156,15 @@ export const {
     addTodolist,
     removeTodolist,
     updateTodolist,
-    // paginationPageChanged,
+    setTasksCount,
+    paginationPageChanged,
+    serverTaskCountIncremented,
 } = todolistsSlice.actions;
-export const { selectTodolistsStatus } = todolistsSlice.selectors;
+export const {
+    selectTodolistsStatus,
+    selectTasksCountForTodolistOnServer,
+    selectPaginationPage,
+} = todolistsSlice.selectors;
 export const { selectIds, selectById } = todolistsAdapter.getSelectors(
     (state: RootState) => state.todolistEntities.todolists,
 );

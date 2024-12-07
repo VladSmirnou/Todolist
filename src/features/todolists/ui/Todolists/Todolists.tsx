@@ -1,6 +1,7 @@
 import { Loader } from '@/common/components/Loader/Loader';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
+import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 import { useLayoutEffect } from 'react';
 import { fetchTasks } from '../../model/tasksSlice';
 import {
@@ -8,9 +9,8 @@ import {
     selectIds,
     selectTodolistsStatus,
 } from '../../model/todolistSlice';
+import { TASKS_PER_PAGE } from '../../utils/constants/constants';
 import { Todolist } from './Todolist/Todolist';
-import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
-import { TASKS_PER_PAGE, INITIAL_PAGE } from '../../utils/constants/constants';
 
 export const Todolists = () => {
     const todolistsStatus = useAppSelector((state) =>
@@ -30,7 +30,6 @@ export const Todolists = () => {
                         fetchTasks({
                             todolistId: id,
                             count: TASKS_PER_PAGE,
-                            page: INITIAL_PAGE,
                         }),
                     );
                 });

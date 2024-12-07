@@ -9,7 +9,6 @@ import {
     removeLocalTasks,
     selectFilteredTaskIds,
     selectTaskIdsForTodolist,
-    selectTasksCountForTodolistOnServer,
 } from '@/features/todolists/model/tasksSlice';
 import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
 import type { FilterValue } from '@/features/todolists/utils/types/todolist.types';
@@ -18,6 +17,11 @@ import { shallowEqual } from 'react-redux';
 import { FilterButtons } from '../FilterButtons/FilterButtons';
 import { TasksPagination } from '../TasksPagination/TasksPagination';
 import { Task } from './Task/Task';
+import {
+    paginationPageChanged,
+    selectPaginationPage,
+    selectTasksCountForTodolistOnServer,
+} from '@/features/todolists/model/todolistSlice';
 
 type TasksStatus = 'idle' | 'loading' | 'success' | 'failure';
 
@@ -31,10 +35,9 @@ export const Tasks = (props: Props) => {
 
     const dispatch = useAppDispatch();
 
-    const [paginationPage, setPaginationPage] = useState<number>(1);
-    // const paginationPage = useAppSelector((state) =>
-    //     selectPaginationPage(state.todolistEntities),
-    // );
+    const paginationPage = useAppSelector((state) =>
+        selectPaginationPage(state.todolistEntities, todolistId),
+    );
 
     const [tasksStatus, setTaskStatus] = useState<TasksStatus>('idle');
     const [filterValue, setFilterValue] = useState<FilterValue>('all');
@@ -64,8 +67,7 @@ export const Tasks = (props: Props) => {
         }
         setFilterValue('all');
         setTaskStatus('loading');
-        // dispatch(paginationPageChanged(nextPage));
-        setPaginationPage(nextPage);
+        dispatch(paginationPageChanged({ todolistId, nextPage }));
         dispatch(removeLocalTasks(taskIds));
         dispatch(
             fetchTasks({
@@ -120,9 +122,9 @@ export const Tasks = (props: Props) => {
     }
 
     return (
-        <div style={{ border: '2px solid blue' }}>
+        <>
             <AddItemForm onAddItem={addTaskCallBack} disabled={disabled} />
-            {content}
+            <div style={{ border: '2px solid blue' }}>{content}</div>
             {tasksCountForTodolistOnServer ?
                 <TasksPagination
                     disabled={disabled}
@@ -136,7 +138,7 @@ export const Tasks = (props: Props) => {
                 filterValue={filterValue}
                 onFilterValueChange={changeFilterValue}
             />
-        </div>
+        </>
     );
 };
 
