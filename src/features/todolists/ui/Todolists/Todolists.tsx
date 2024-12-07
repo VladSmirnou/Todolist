@@ -10,9 +10,7 @@ import {
 } from '../../model/todolistSlice';
 import { Todolist } from './Todolist/Todolist';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
-
-const TASKS_PER_PAGE = 5;
-const INITIAL_PAGE = 1;
+import { TASKS_PER_PAGE, INITIAL_PAGE } from '../../utils/constants/constants';
 
 export const Todolists = () => {
     const todolistsStatus = useAppSelector((state) =>
