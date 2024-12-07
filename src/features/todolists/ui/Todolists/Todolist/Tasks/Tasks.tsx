@@ -31,8 +31,12 @@ export const Tasks = (props: Props) => {
 
     const dispatch = useAppDispatch();
 
-    const [tasksStatus, setTaskStatus] = useState<TasksStatus>('idle');
     const [paginationPage, setPaginationPage] = useState<number>(1);
+    // const paginationPage = useAppSelector((state) =>
+    //     selectPaginationPage(state.todolistEntities),
+    // );
+
+    const [tasksStatus, setTaskStatus] = useState<TasksStatus>('idle');
     const [filterValue, setFilterValue] = useState<FilterValue>('all');
 
     const tasksCountForTodolistOnServer = useAppSelector((state) =>
@@ -60,6 +64,7 @@ export const Tasks = (props: Props) => {
         }
         setFilterValue('all');
         setTaskStatus('loading');
+        // dispatch(paginationPageChanged(nextPage));
         setPaginationPage(nextPage);
         dispatch(removeLocalTasks(taskIds));
         dispatch(
