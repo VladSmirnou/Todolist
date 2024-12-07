@@ -8,11 +8,7 @@ import { tasksApi } from '../api/tasksApi';
 import type { FilterValue, Task } from '../utils/types/todolist.types';
 import { TaskStatusCodes } from '@/common/enums/enums';
 
-const tasksAdapter = createEntityAdapter<Task>({
-    // перенести сортировку в таски отдельно, чтобы не сортировать их все
-    // постоянно
-    sortComparer: (a, b) => a.order - b.order,
-});
+const tasksAdapter = createEntityAdapter<Task>();
 
 // tasks from the server (order) [-4, -3, -2, -1, 0]
 // чем меньше цифра, тем раньше был добавлен таск
@@ -165,17 +161,19 @@ export const {
     removeLocalOldestTaskForTodolist,
     removeLocalTask,
 } = tasksSlise.actions;
-export const { selectIds, selectById, selectAll } = tasksAdapter.getSelectors(
-    (state: RootState) => state.todolistEntities.tasks,
-);
+export const { selectIds, selectById, selectEntities } =
+    tasksAdapter.getSelectors(
+        (state: RootState) => state.todolistEntities.tasks,
+    );
 export const { selectTasksCountForTodolistOnServer } = tasksSlise.selectors;
 
 export const selectTaskIdsForTodolist = (
     state: RootState,
     todolistId: string,
 ) => {
-    return selectAll(state)
+    return Object.values(selectEntities(state))
         .filter((task) => task.todoListId === todolistId)
+        .sort((a, b) => a.order - b.order)
         .map(({ id }) => id);
 };
 
@@ -184,26 +182,17 @@ export const selectFilteredTaskIds = (
     taskIds: Array<string>,
     filterValue: FilterValue,
 ) => {
-    const taskIdsSet = new Set(taskIds);
+    let tasks = taskIds.map((id) => selectById(state, id));
 
-    const tasks = selectAll(state).filter(({ id }) => taskIdsSet.has(id));
+    if (filterValue !== 'all') {
+        tasks = tasks.filter(
+            (task) =>
+                (filterValue === 'active' &&
+                    task.status === TaskStatusCodes.New) ||
+                (filterValue === 'completed' &&
+                    task.status === TaskStatusCodes.Completed),
+        );
+    }
 
-    const res = tasks
-        .filter((task) => {
-            if (filterValue === 'all') {
-                return true;
-            } else if (
-                filterValue === 'active' &&
-                task.status === TaskStatusCodes.New
-            ) {
-                return true;
-            } else if (
-                filterValue === 'completed' &&
-                task.status === TaskStatusCodes.Completed
-            ) {
-                return true;
-            }
-        })
-        .map(({ id }) => id);
-    return res;
+    return tasks.map(({ id }) => id);
 };

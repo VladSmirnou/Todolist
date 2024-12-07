@@ -98,15 +98,24 @@ const todolistsSlice = createAppSlice({
             },
             { fulfilled: todolistsAdapter.updateOne },
         ),
+        // paginationPageChanged: create.reducer<number>((state, action) => {
+        //     state.paginationPage = action.payload;
+        // }),
     }),
     selectors: {
         selectTodolistsStatus: (state) => state.todolistsStatus,
+        // selectPaginationPage: (state) => state.paginationPage,
     },
 });
 
 export const { reducer: todolistsReducer } = todolistsSlice;
-export const { fetchTodolists, addTodolist, removeTodolist, updateTodolist } =
-    todolistsSlice.actions;
+export const {
+    fetchTodolists,
+    addTodolist,
+    removeTodolist,
+    updateTodolist,
+    // paginationPageChanged,
+} = todolistsSlice.actions;
 export const { selectTodolistsStatus } = todolistsSlice.selectors;
 export const { selectIds, selectById } = todolistsAdapter.getSelectors(
     (state: RootState) => state.todolistEntities.todolists,

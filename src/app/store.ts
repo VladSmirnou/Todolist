@@ -19,7 +19,10 @@ import {
     removeLocalTasks,
     tasksReducer,
 } from '@/features/todolists/model/tasksSlice';
-import { todolistsReducer } from '@/features/todolists/model/todolistSlice';
+import {
+    // paginationPageChanged,
+    todolistsReducer,
+} from '@/features/todolists/model/todolistSlice';
 
 const todolistEntitiesReducer = combineReducers({
     todolists: todolistsReducer,
@@ -42,6 +45,7 @@ type AppActionType =
     | ReturnType<typeof removeLocalTask>
     | ReturnType<typeof removeLocalTasks>
     | ReturnType<typeof removeLocalOldestTaskForTodolist>;
+// | ReturnType<typeof paginationPageChanged>;
 // typeof store.dispatch returns ThunkDispatch<RootState, undefined, UnknownAction>
 // so I will be able to dispatch everything without any type checking
 // because of that I'll combine my reducer actions myself
