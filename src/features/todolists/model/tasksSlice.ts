@@ -1,4 +1,5 @@
 import { RootState } from '@/app/store';
+import { TaskStatusCodes } from '@/common/enums/enums';
 import { clientErrorHandler } from '@/common/utils/clientErrorHandler';
 import { createAppSlice } from '@/common/utils/createAppSlice';
 import { serverErrorHandler } from '@/common/utils/serverErrorHandler';
@@ -6,9 +7,7 @@ import { createEntityAdapter } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { tasksApi } from '../api/tasksApi';
 import type { FilterValue, Task } from '../utils/types/todolist.types';
-import { TaskStatusCodes } from '@/common/enums/enums';
-import { serverTaskCountIncremented, setTasksCount } from './todolistSlice';
-import { INITIAL_PAGE } from '../utils/constants/constants';
+import { setTasksCount } from './todolistSlice';
 
 const tasksAdapter = createEntityAdapter<Task>();
 
@@ -44,10 +43,6 @@ const tasksSlise = createAppSlice({
                     .todolistEntities.todolists.paginationPageForTodolist[
                     args.todolistId
                 ];
-                // const todolistPaginationPage =
-                //     (getState() as RootState).todolistEntities.todolists
-                //         .paginationPageForTodolist[args.todolistId] ??
-                //     INITIAL_PAGE;
                 const requestArgs = {
                     ...args,
                     page: args.page ?? todolistPaginationPage,
@@ -77,14 +72,12 @@ const tasksSlise = createAppSlice({
                 try {
                     const res = await tasksApi.addTask(args);
                     serverErrorHandler(res.data);
-                    dispatch(serverTaskCountIncremented(args.todolistId));
                     return res.data.data.item;
                 } catch (e) {
                     const errorMessage = clientErrorHandler(e, dispatch);
                     throw new Error(errorMessage);
                 }
             },
-            { fulfilled: tasksAdapter.addOne },
         ),
         updateTask: create.asyncThunk(
             async (

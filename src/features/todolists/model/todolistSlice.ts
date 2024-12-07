@@ -10,6 +10,8 @@ import { INITIAL_PAGE } from '../utils/constants/constants';
 
 type TodolistsStatus = 'idle' | 'loading' | 'success' | 'failure';
 
+// тудулистов максимум может быть 10 штук и они не так часто меняются,
+// поэтому можно оставить сортировку тут
 const todolistsAdapter = createEntityAdapter<Todolist>({
     sortComparer: (a, b) => b.addedDate.localeCompare(a.addedDate),
 });
@@ -43,9 +45,9 @@ const todolistsSlice = createAppSlice({
                         // todolists component dismounts, so todolists
                         // are gonna be refetched, but I still have them im my
                         // local app memory and don't want to reset their pagination.
-                        // For ther initial load I need to
-                        // set their initial pagination anyway
-                        // Tasks count will be set after tasks are fetched
+                        // For the initial load I need to set their initial
+                        // pagination anyway.
+                        // Tasks count will be set after tasks are fetched.
                         if (!state.paginationPageForTodolist[id]) {
                             state.paginationPageForTodolist[id] = INITIAL_PAGE;
                         }
@@ -137,9 +139,6 @@ const todolistsSlice = createAppSlice({
             const { todolistId, nextPage } = action.payload;
             state.paginationPageForTodolist[todolistId] = nextPage;
         }),
-        serverTaskCountIncremented: create.reducer<string>((state, action) => {
-            state.tasksCountForTodolistOnServer[action.payload]++;
-        }),
     }),
     selectors: {
         selectTodolistsStatus: (state) => state.todolistsStatus,
@@ -158,7 +157,6 @@ export const {
     updateTodolist,
     setTasksCount,
     paginationPageChanged,
-    serverTaskCountIncremented,
 } = todolistsSlice.actions;
 export const {
     selectTodolistsStatus,
