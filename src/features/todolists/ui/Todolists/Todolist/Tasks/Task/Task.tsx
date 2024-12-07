@@ -9,6 +9,7 @@ import {
     selectById,
     updateTask,
 } from '@/features/todolists/model/tasksSlice';
+import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
 import { ChangeEvent, useState } from 'react';
 
 type TaskStatus = 'idle' | 'deleting' | 'changingStatus' | 'changingTitle';
@@ -18,8 +19,6 @@ type Props = {
     taskId: string;
     page: number;
 };
-
-const TASKS_PER_PAGE = 5;
 
 export const Task = (props: Props) => {
     const { disabled: deletingTodolist, taskId, page } = props;
@@ -57,6 +56,11 @@ export const Task = (props: Props) => {
         setTaskStatus('deleting');
         try {
             await dispatch(removeTask({ taskId, todoListId })).unwrap();
+        } catch {
+            setTaskStatus('idle');
+            return;
+        }
+        try {
             await dispatch(
                 fetchTasks({
                     todolistId: todoListId,
@@ -64,11 +68,11 @@ export const Task = (props: Props) => {
                     page,
                 }),
             ).unwrap();
-            // может быть дисинк с сервером, если запрос выше провалится
-            // тогда тудулист останется локально, но будет удален на сервере
+        } finally {
+            // Если таск был удален с сервера успешно, мне не важно как завершиться
+            // fetch запрос, мне надо удалить таск локально, но только после того,
+            // как завершится запрос, чтобы ui не дергался
             dispatch(removeLocalTask(taskId));
-        } catch {
-            console.log('');
         }
         setTaskStatus('idle');
     };

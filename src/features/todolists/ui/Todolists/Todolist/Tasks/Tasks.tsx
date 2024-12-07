@@ -7,10 +7,11 @@ import {
     fetchTasks,
     removeLocalOldestTaskForTodolist,
     removeLocalTasks,
-    selectFilteredTaskIdsForTodolist,
-    selectTasksCount,
-    selectTasksForTodolist,
+    selectFilteredTaskIds,
+    selectTaskIdsForTodolist,
+    selectTasksCountForTodolistOnServer,
 } from '@/features/todolists/model/tasksSlice';
+import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
 import type { FilterValue } from '@/features/todolists/utils/types/todolist.types';
 import { useState } from 'react';
 import { shallowEqual } from 'react-redux';
@@ -25,8 +26,6 @@ type Props = {
     todolistId: string;
 };
 
-const TASKS_PER_PAGE = 5;
-
 export const Tasks = (props: Props) => {
     const { disabled, todolistId } = props;
 
@@ -36,22 +35,24 @@ export const Tasks = (props: Props) => {
     const [paginationPage, setPaginationPage] = useState<number>(1);
     const [filterValue, setFilterValue] = useState<FilterValue>('all');
 
-    const tasksCount = useAppSelector((state) =>
-        selectTasksCount(state.todolistEntities, todolistId),
+    const tasksCountForTodolistOnServer = useAppSelector((state) =>
+        selectTasksCountForTodolistOnServer(state.todolistEntities, todolistId),
     );
 
     const taskIds = useAppSelector(
-        (state) => selectTasksForTodolist(state, todolistId),
+        (state) => selectTaskIdsForTodolist(state, todolistId),
         shallowEqual,
     );
 
     const filteredTaskIds = useAppSelector(
-        (state) =>
-            selectFilteredTaskIdsForTodolist(state, filterValue, todolistId),
+        (state) => selectFilteredTaskIds(state, taskIds, filterValue),
         shallowEqual,
     );
 
-    const amountOfPages = Math.ceil(tasksCount / TASKS_PER_PAGE);
+    const amountOfPages = getAmountOfPages(
+        tasksCountForTodolistOnServer,
+        TASKS_PER_PAGE,
+    );
 
     const handleSetPaginationPage = (nextPage: number) => {
         if (nextPage === paginationPage) {
@@ -117,7 +118,7 @@ export const Tasks = (props: Props) => {
         <div style={{ border: '2px solid blue' }}>
             <AddItemForm onAddItem={addTaskCallBack} disabled={disabled} />
             {content}
-            {tasksCount ?
+            {tasksCountForTodolistOnServer ?
                 <TasksPagination
                     disabled={disabled}
                     paginationPage={paginationPage}
@@ -132,4 +133,11 @@ export const Tasks = (props: Props) => {
             />
         </div>
     );
+};
+
+const getAmountOfPages = (
+    tasksCountForTodolistOnServer: number,
+    tasksPerPage: number,
+) => {
+    return Math.ceil(tasksCountForTodolistOnServer / tasksPerPage);
 };
