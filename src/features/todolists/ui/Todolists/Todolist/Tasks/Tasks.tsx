@@ -10,6 +10,11 @@ import {
     selectFilteredTaskIds,
     selectTaskIdsForTodolist,
 } from '@/features/todolists/model/tasksSlice';
+import {
+    paginationPageChanged,
+    selectPaginationPage,
+    selectTasksCountForTodolistOnServer,
+} from '@/features/todolists/model/todolistSlice';
 import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
 import type { FilterValue } from '@/features/todolists/utils/types/todolist.types';
 import { useState } from 'react';
@@ -17,11 +22,6 @@ import { shallowEqual } from 'react-redux';
 import { FilterButtons } from '../FilterButtons/FilterButtons';
 import { TasksPagination } from '../TasksPagination/TasksPagination';
 import { Task } from './Task/Task';
-import {
-    paginationPageChanged,
-    selectPaginationPage,
-    selectTasksCountForTodolistOnServer,
-} from '@/features/todolists/model/todolistSlice';
 
 type TasksStatus = 'idle' | 'loading' | 'success' | 'failure';
 
@@ -78,9 +78,16 @@ export const Tasks = (props: Props) => {
         ).finally(() => setTaskStatus('idle'));
     };
 
-    const addTaskCallBack = (title: string) => {
+    const addTaskCallBack = async (title: string) => {
         setTaskStatus('loading');
-        dispatch(addTask({ todolistId, title }))
+        await dispatch(addTask({ todolistId, title })).unwrap();
+        await dispatch(
+            fetchTasks({
+                todolistId,
+                count: TASKS_PER_PAGE,
+                page: paginationPage,
+            }),
+        )
             .unwrap()
             .then(() => {
                 if (taskIds.length === TASKS_PER_PAGE) {
