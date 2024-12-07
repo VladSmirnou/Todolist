@@ -1,5 +1,4 @@
 import { RootState } from '@/app/store';
-import { TaskStatusCodes } from '@/common/enums/enums';
 import { clientErrorHandler } from '@/common/utils/clientErrorHandler';
 import { createAppSlice } from '@/common/utils/createAppSlice';
 import { serverErrorHandler } from '@/common/utils/serverErrorHandler';
@@ -7,6 +6,7 @@ import { createEntityAdapter } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { tasksApi } from '../api/tasksApi';
 import type { FilterValue, Task } from '../utils/types/todolist.types';
+import { TaskStatusCodes } from '@/common/enums/enums';
 
 const tasksAdapter = createEntityAdapter<Task>({
     // перенести сортировку в таски отдельно, чтобы не сортировать их все
@@ -150,7 +150,7 @@ const tasksSlise = createAppSlice({
         ),
     }),
     selectors: {
-        selectTasksCount: (state, todolistId: string) =>
+        selectTasksCountForTodolistOnServer: (state, todolistId: string) =>
             state.tasksCountForTodolistOnServer[todolistId],
     },
 });
@@ -168,9 +168,9 @@ export const {
 export const { selectIds, selectById, selectAll } = tasksAdapter.getSelectors(
     (state: RootState) => state.todolistEntities.tasks,
 );
-export const { selectTasksCount } = tasksSlise.selectors;
+export const { selectTasksCountForTodolistOnServer } = tasksSlise.selectors;
 
-export const selectTasksForTodolist = (
+export const selectTaskIdsForTodolist = (
     state: RootState,
     todolistId: string,
 ) => {
@@ -179,28 +179,29 @@ export const selectTasksForTodolist = (
         .map(({ id }) => id);
 };
 
-export const selectFilteredTaskIdsForTodolist = (
+export const selectFilteredTaskIds = (
     state: RootState,
+    taskIds: Array<string>,
     filterValue: FilterValue,
-    todolistId: string,
 ) => {
-    const taskEntities = selectAll(state);
-    const res = taskEntities
+    const taskIdsSet = new Set(taskIds);
+
+    const tasks = selectAll(state).filter(({ id }) => taskIdsSet.has(id));
+
+    const res = tasks
         .filter((task) => {
-            if (task.todoListId === todolistId) {
-                if (filterValue === 'all') {
-                    return true;
-                } else if (
-                    filterValue === 'active' &&
-                    task.status === TaskStatusCodes.New
-                ) {
-                    return true;
-                } else if (
-                    filterValue === 'completed' &&
-                    task.status === TaskStatusCodes.Completed
-                ) {
-                    return true;
-                }
+            if (filterValue === 'all') {
+                return true;
+            } else if (
+                filterValue === 'active' &&
+                task.status === TaskStatusCodes.New
+            ) {
+                return true;
+            } else if (
+                filterValue === 'completed' &&
+                task.status === TaskStatusCodes.Completed
+            ) {
+                return true;
             }
         })
         .map(({ id }) => id);
