@@ -1,16 +1,17 @@
 import { ChangeEvent, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Typography from '@mui/material/Typography';
+import Typography, { TypographyProps } from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
 
 type Props = {
     spanText: string;
     onEdit: (newValue: string) => void;
     disabled?: boolean;
     navigateToLink?: string;
-};
+} & TypographyProps;
 
 export const EditableSpan = (props: Props) => {
-    const { spanText, onEdit, disabled, navigateToLink } = props;
+    const { spanText, onEdit, disabled, navigateToLink, ...rest } = props;
 
     const navigate = useNavigate();
 
@@ -45,8 +46,11 @@ export const EditableSpan = (props: Props) => {
     };
 
     const handleBlur = () => {
-        if (!inputText.trim()) {
+        const nextInputText = inputText.trim();
+        if (!nextInputText) {
             setError('Title cannot be empty!');
+        } else if (nextInputText === spanText) {
+            setEditMode(false);
         } else {
             setEditMode(false);
             onEdit(inputText);
@@ -54,22 +58,17 @@ export const EditableSpan = (props: Props) => {
     };
 
     return editMode ?
-            <div>
-                <input
-                    type="text"
-                    value={inputText}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    autoFocus
-                />
-                {error && <p>{error}</p>}
-            </div>
-        :   <Typography
-                variant={'body1'}
-                component={'span'}
-                onClick={handleClick}
-                style={{ color: disabled ? 'gray' : 'black' }}
-            >
+            <TextField
+                autoFocus
+                size={'small'}
+                value={inputText}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                disabled={disabled}
+                error={!!error}
+                helperText={error}
+            />
+        :   <Typography onClick={handleClick} {...rest}>
                 {spanText}
             </Typography>;
 };

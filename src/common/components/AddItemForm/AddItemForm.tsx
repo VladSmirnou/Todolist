@@ -7,11 +7,11 @@ type Props = {
     disabled?: boolean;
     onAddItem: (itemName: string) => void;
     placeholder: string;
-    className?: string;
+    // className?: string;
 };
 
 export const AddItemForm = (props: Props) => {
-    const { disabled, onAddItem, placeholder, className } = props;
+    const { disabled, onAddItem, placeholder } = props;
 
     const [inputText, setInputText] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export const AddItemForm = (props: Props) => {
     };
 
     return (
-        <div className={className}>
+        <div>
             <TextField
                 size={'small'}
                 value={inputText}

@@ -1,11 +1,11 @@
+import { CicrularLoader } from '@/common/components/CircularProgress/CircularProgress';
 import { Header } from '@/common/components/Header/Header';
-import { Loader } from '@/common/components/Loader/Loader';
 import { MessagePopup } from '@/common/components/MessagePopup/MessagePopup';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { me } from '@/features/auth/model/authSlice';
+import CssBaseline from '@mui/material/CssBaseline';
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import CssBaseline from '@mui/material/CssBaseline';
 
 export const App = () => {
     const dispatch = useAppDispatch();
@@ -24,5 +24,5 @@ export const App = () => {
                 <Outlet />
                 <MessagePopup />
             </>
-        :   <Loader />;
+        :   <CicrularLoader />;
 };
