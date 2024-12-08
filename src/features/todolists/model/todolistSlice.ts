@@ -1,14 +1,19 @@
 import { RootState } from '@/app/store';
 import { clientErrorHandler } from '@/common/utils/clientErrorHandler';
 import { createAppSlice } from '@/common/utils/createAppSlice';
+import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 import { serverErrorHandler } from '@/common/utils/serverErrorHandler';
 import { createEntityAdapter } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { todolistsApi } from '../api/todolistsApi';
 import type { Todolist } from '../utils/types/todolist.types';
-import { INITIAL_PAGE } from '../utils/constants/constants';
 
-type TodolistsStatus = 'idle' | 'loading' | 'success' | 'failure';
+type TodolistsStatus =
+    | 'idle'
+    | 'initialLoading'
+    | 'loading'
+    | 'success'
+    | 'failure';
 
 // тудулистов максимум может быть 10 штук и они не так часто меняются,
 // поэтому можно оставить сортировку тут
@@ -19,7 +24,7 @@ const todolistsAdapter = createEntityAdapter<Todolist>({
 const todolistsSlice = createAppSlice({
     name: 'todolists',
     initialState: todolistsAdapter.getInitialState({
-        todolistsStatus: 'idle' as TodolistsStatus,
+        todolistsStatus: 'initialLoading' as TodolistsStatus,
         tasksCountForTodolistOnServer: {} as { [key: string]: number },
         paginationPageForTodolist: {} as { [key: string]: number },
     }),
@@ -35,23 +40,8 @@ const todolistsSlice = createAppSlice({
                 }
             },
             {
-                pending: (state) => {
-                    state.todolistsStatus = 'loading';
-                },
                 fulfilled: (state, action) => {
                     state.todolistsStatus = 'success';
-                    action.payload.forEach(({ id }) => {
-                        // When I go to a single post page and back,
-                        // todolists component dismounts, so todolists
-                        // are gonna be refetched, but I still have them im my
-                        // local app memory and don't want to reset their pagination.
-                        // For the initial load I need to set their initial
-                        // pagination anyway.
-                        // Tasks count will be set after tasks are fetched.
-                        if (!state.paginationPageForTodolist[id]) {
-                            state.paginationPageForTodolist[id] = INITIAL_PAGE;
-                        }
-                    });
                     todolistsAdapter.setAll(state, action);
                 },
                 rejected: (state) => {
@@ -64,6 +54,11 @@ const todolistsSlice = createAppSlice({
                 try {
                     const res = await todolistsApi.addTodolist(todolistTitle);
                     serverErrorHandler(res.data);
+                    dispatchAppStatusData(
+                        dispatch,
+                        'succeeded',
+                        'Todolist was successfully added',
+                    );
                     return res.data.data.item;
                 } catch (e) {
                     const errorMessage = clientErrorHandler(e, dispatch);
