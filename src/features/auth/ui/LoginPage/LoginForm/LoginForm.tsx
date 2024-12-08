@@ -32,10 +32,7 @@ export const LoginForm = () => {
         handleSubmit,
         formState: { errors, isValid, isDirty },
         setError,
-    } = useForm<LoginFormData>({
-        defaultValues,
-        mode: 'onSubmit',
-    });
+    } = useForm<LoginFormData>({ defaultValues });
 
     const onSubmit: SubmitHandler<LoginFormData> = (data) => {
         dispatch(login(data))
@@ -88,7 +85,12 @@ export const LoginForm = () => {
                     })}
                 />
                 <FormControlLabel
-                    control={<Checkbox {...register('rememberMe')} />}
+                    control={
+                        <Checkbox
+                            disabled={appStatus === 'pending'}
+                            {...register('rememberMe')}
+                        />
+                    }
                     label="Remember me"
                 />
                 <Button

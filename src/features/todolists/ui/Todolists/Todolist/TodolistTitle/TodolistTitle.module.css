@@ -1,0 +1,9 @@
+.container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.taskTitleDisabled {
+    color: gray;
+}

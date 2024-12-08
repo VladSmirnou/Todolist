@@ -7,6 +7,7 @@ import {
 import type { TodolistStatus } from '../Todolist';
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
+import s from './TodolistTitle.module.css';
 
 type Props = {
     disabled: boolean;
@@ -35,11 +36,14 @@ export const TodolistTitle = (props: Props) => {
     };
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div className={s.container}>
             <EditableSpan
                 onEdit={updateTodo}
                 spanText={title}
                 disabled={disabled}
+                className={disabled ? s.taskTitleDisabled : undefined}
+                component={'h3'}
+                variant={'h5'}
             />
             <IconButton
                 disabled={disabled}

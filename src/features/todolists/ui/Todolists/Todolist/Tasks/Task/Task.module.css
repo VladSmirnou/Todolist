@@ -1,0 +1,13 @@
+.taskTitle {
+    flex-grow: 1;
+    text-align: left;
+    cursor: pointer;
+}
+
+.taskTitle:hover {
+    font-weight: bold;
+}
+
+.taskTitleDisabled {
+    color: gray;
+}

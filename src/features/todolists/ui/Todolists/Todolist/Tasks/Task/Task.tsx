@@ -10,10 +10,12 @@ import {
     updateTask,
 } from '@/features/todolists/model/tasksSlice';
 import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
+import { bindClasses } from '@/features/todolists/utils/moduleStyleBinder/moduleStyleBinder';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import { ChangeEvent, useState } from 'react';
+import s from './Task.module.css';
 
 type TaskStatus = 'idle' | 'deleting' | 'changingStatus' | 'changingTitle';
 
@@ -80,6 +82,11 @@ export const Task = (props: Props) => {
         setTaskStatus('idle');
     };
 
+    const cx = bindClasses({ taskTitleDisabled: s.taskTitleDisabled });
+    const className = cx(s.taskTitle, {
+        taskTitleDisabled: combinedCase || changingTaskTitle,
+    });
+
     return (
         <li
             style={{
@@ -98,6 +105,7 @@ export const Task = (props: Props) => {
                 onEdit={handleTitleChange}
                 disabled={combinedCase || changingTaskTitle}
                 navigateToLink={`/tasks/${id}`}
+                className={className}
             />
             <IconButton
                 disabled={combinedCase}
