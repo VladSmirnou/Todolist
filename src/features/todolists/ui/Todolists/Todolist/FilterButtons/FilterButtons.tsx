@@ -1,4 +1,6 @@
+import Button from '@mui/material/Button';
 import { FilterValue } from '@/features/todolists/utils/types/todolist.types';
+import s from './FilterButtons.module.css';
 
 type Props = {
     filterValue: FilterValue;
@@ -14,37 +16,28 @@ export const FilterButtons = (props: Props) => {
     };
 
     return (
-        <div>
-            <button
+        <div className={s.container}>
+            <Button
+                variant={'all' === filterValue ? 'contained' : 'outlined'}
                 onClick={() => handleFilterValueChange('all')}
                 disabled={disabled}
-                style={{
-                    backgroundColor:
-                        'all' === filterValue ? 'aquamarine' : 'revert',
-                }}
             >
                 all
-            </button>
-            <button
+            </Button>
+            <Button
+                variant={'active' === filterValue ? 'contained' : 'outlined'}
                 onClick={() => handleFilterValueChange('active')}
                 disabled={disabled}
-                style={{
-                    backgroundColor:
-                        'active' === filterValue ? 'aquamarine' : 'revert',
-                }}
             >
                 active
-            </button>
-            <button
+            </Button>
+            <Button
+                variant={'completed' === filterValue ? 'contained' : 'outlined'}
                 onClick={() => handleFilterValueChange('completed')}
                 disabled={disabled}
-                style={{
-                    backgroundColor:
-                        'completed' === filterValue ? 'aquamarine' : 'revert',
-                }}
             >
                 completed
-            </button>
+            </Button>
         </div>
     );
 };

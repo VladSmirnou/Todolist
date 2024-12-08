@@ -10,6 +10,9 @@ import {
     updateTask,
 } from '@/features/todolists/model/tasksSlice';
 import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Checkbox from '@mui/material/Checkbox';
+import IconButton from '@mui/material/IconButton';
 import { ChangeEvent, useState } from 'react';
 
 type TaskStatus = 'idle' | 'deleting' | 'changingStatus' | 'changingTitle';
@@ -78,12 +81,17 @@ export const Task = (props: Props) => {
     };
 
     return (
-        <li>
-            <input
+        <li
+            style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+            }}
+        >
+            <Checkbox
                 disabled={combinedCase || changingTaskStatus}
-                type="checkbox"
-                onChange={handleStatusChange}
                 checked={status === TaskStatusCodes.Completed}
+                onChange={handleStatusChange}
             />
             <EditableSpan
                 spanText={title}
@@ -91,9 +99,14 @@ export const Task = (props: Props) => {
                 disabled={combinedCase || changingTaskTitle}
                 navigateToLink={`/tasks/${id}`}
             />
-            <button disabled={combinedCase} onClick={handleDeleteTask}>
-                X
-            </button>
+            <IconButton
+                disabled={combinedCase}
+                onClick={handleDeleteTask}
+                aria-label="delete"
+                size="medium"
+            >
+                <DeleteIcon fontSize="inherit" />
+            </IconButton>
         </li>
     );
 };

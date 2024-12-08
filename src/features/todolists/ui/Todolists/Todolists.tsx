@@ -11,6 +11,7 @@ import {
 } from '../../model/todolistSlice';
 import { TASKS_PER_PAGE } from '../../utils/constants/constants';
 import { Todolist } from './Todolist/Todolist';
+import s from './Todolists.module.css';
 
 export const Todolists = () => {
     const todolistsStatus = useAppSelector((state) =>
@@ -56,5 +57,5 @@ export const Todolists = () => {
         content = <p>You dont have any todolists yet!</p>;
     }
 
-    return <div style={{ backgroundColor: 'pink' }}>{content}</div>;
+    return <div className={s.container}>{content}</div>;
 };

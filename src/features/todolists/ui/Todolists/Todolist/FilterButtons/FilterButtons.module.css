@@ -1,0 +1,10 @@
+.container {
+    display: flex;
+    justify-content: space-between;
+    column-gap: 15px;
+    margin-top: 15px;
+}
+
+.container > button {
+    flex: 1;
+}

@@ -3,6 +3,7 @@ import { selectById } from '@/features/todolists/model/todolistSlice';
 import { memo, useState } from 'react';
 import { Tasks } from './Tasks/Tasks';
 import { TodolistTitle } from './TodolistTitle/TodolistTitle';
+import Paper from '@mui/material/Paper';
 
 export type TodolistStatus = 'idle' | 'updating' | 'deleting';
 
@@ -24,7 +25,7 @@ export const Todolist = memo(function Todolist(props: Props) {
     const changingTodolistTitle = todolistStatus === 'updating';
 
     return (
-        <div style={{ border: '2px solid black' }}>
+        <Paper sx={{ padding: 2, height: 'min-content' }} elevation={3}>
             <TodolistTitle
                 todolistId={todolistId}
                 title={title}
@@ -32,6 +33,6 @@ export const Todolist = memo(function Todolist(props: Props) {
                 onSetTodolistStatus={setTodolistStatus}
             />
             <Tasks disabled={deletingTodolist} todolistId={todolistId} />
-        </div>
+        </Paper>
     );
 });

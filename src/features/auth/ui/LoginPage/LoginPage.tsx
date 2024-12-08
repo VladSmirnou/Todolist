@@ -3,6 +3,7 @@ import { LoginForm } from './LoginForm/LoginForm';
 import { Title } from './Title/Title';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { selectIsLoggedIn } from '../../model/authSlice';
+import Container from '@mui/material/Container';
 
 export const LoginPage = () => {
     const isLoggedIn = useAppSelector(selectIsLoggedIn);
@@ -13,8 +14,13 @@ export const LoginPage = () => {
 
     return (
         <section>
-            <Title />
-            <LoginForm />
+            <Container
+                maxWidth={'xl'}
+                sx={{ display: 'grid', justifyContent: 'center' }}
+            >
+                <Title />
+                <LoginForm />
+            </Container>
         </section>
     );
 };
