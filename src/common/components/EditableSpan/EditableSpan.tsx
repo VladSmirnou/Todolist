@@ -28,11 +28,10 @@ export const EditableSpan = (props: Props) => {
                     clicksCount.current = 0;
                     if (navigateToLink && clicks < 2) {
                         navigate(navigateToLink);
-                        return;
-                    } else if (clicks >= 2) {
+                    }
+                    if (clicks >= 2) {
                         setInputText(spanText);
                         setEditMode(true);
-                        return;
                     }
                 }, 200);
             }
