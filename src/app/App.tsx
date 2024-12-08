@@ -5,6 +5,7 @@ import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { me } from '@/features/auth/model/authSlice';
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import CssBaseline from '@mui/material/CssBaseline';
 
 export const App = () => {
     const dispatch = useAppDispatch();
@@ -18,6 +19,7 @@ export const App = () => {
 
     return meRequestIsFinished ?
             <>
+                <CssBaseline />
                 <Header />
                 <Outlet />
                 <MessagePopup />

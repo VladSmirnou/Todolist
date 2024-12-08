@@ -1,0 +1,7 @@
+.container {
+    margin: 70px 0 15px;
+}
+
+.container > p {
+    margin: 10px 0 10px;
+}

@@ -1,5 +1,6 @@
 import { ChangeEvent, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Typography from '@mui/material/Typography';
 
 type Props = {
     spanText: string;
@@ -64,10 +65,12 @@ export const EditableSpan = (props: Props) => {
                 />
                 {error && <p>{error}</p>}
             </div>
-        :   <span
+        :   <Typography
+                variant={'body1'}
+                component={'span'}
                 onClick={handleClick}
                 style={{ color: disabled ? 'gray' : 'black' }}
             >
                 {spanText}
-            </span>;
+            </Typography>;
 };

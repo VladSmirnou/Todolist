@@ -1,12 +1,17 @@
+import AddBoxIcon from '@mui/icons-material/AddBox';
+import IconButton from '@mui/material/IconButton';
 import { ChangeEvent, useState } from 'react';
+import TextField from '@mui/material/TextField';
 
 type Props = {
     disabled?: boolean;
     onAddItem: (itemName: string) => void;
+    placeholder: string;
+    className?: string;
 };
 
 export const AddItemForm = (props: Props) => {
-    const { disabled, onAddItem } = props;
+    const { disabled, onAddItem, placeholder, className } = props;
 
     const [inputText, setInputText] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
@@ -26,17 +31,24 @@ export const AddItemForm = (props: Props) => {
     };
 
     return (
-        <div>
-            <input
-                type="text"
+        <div className={className}>
+            <TextField
+                size={'small'}
                 value={inputText}
                 onChange={handleChange}
                 disabled={disabled}
+                error={!!error}
+                label={placeholder}
+                helperText={error}
             />
-            <button disabled={!!error || disabled} onClick={handleAddItem}>
-                +
-            </button>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            <IconButton
+                disabled={!!error || disabled}
+                onClick={handleAddItem}
+                aria-label="add"
+                color="primary"
+            >
+                <AddBoxIcon fontSize="inherit" />
+            </IconButton>
         </div>
     );
 };

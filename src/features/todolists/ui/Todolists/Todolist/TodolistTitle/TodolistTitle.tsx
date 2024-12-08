@@ -5,6 +5,8 @@ import {
     updateTodolist,
 } from '@/features/todolists/model/todolistSlice';
 import type { TodolistStatus } from '../Todolist';
+import DeleteIcon from '@mui/icons-material/Delete';
+import IconButton from '@mui/material/IconButton';
 
 type Props = {
     disabled: boolean;
@@ -33,15 +35,20 @@ export const TodolistTitle = (props: Props) => {
     };
 
     return (
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
             <EditableSpan
                 onEdit={updateTodo}
                 spanText={title}
                 disabled={disabled}
             />
-            <button disabled={disabled} onClick={deleteTodo}>
-                x
-            </button>
+            <IconButton
+                disabled={disabled}
+                onClick={deleteTodo}
+                aria-label="delete"
+                size="medium"
+            >
+                <DeleteIcon fontSize="inherit" />
+            </IconButton>
         </div>
     );
 };

@@ -2,6 +2,7 @@ import { AddItemForm } from '@/common/components/AddItemForm/AddItemForm';
 import { Loader } from '@/common/components/Loader/Loader';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
+import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 import {
     addTask,
     fetchTasks,
@@ -22,7 +23,8 @@ import { shallowEqual } from 'react-redux';
 import { FilterButtons } from '../FilterButtons/FilterButtons';
 import { TasksPagination } from '../TasksPagination/TasksPagination';
 import { Task } from './Task/Task';
-import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
+import s from './Tasks.module.css';
+import Typography from '@mui/material/Typography';
 
 type TasksStatus = 'idle' | 'loading' | 'success' | 'failure';
 
@@ -122,7 +124,7 @@ export const Tasks = (props: Props) => {
         content = (
             <>
                 {tasksStatus === 'loading' && <Loader />}
-                <ul>
+                <ul className={s.tasksList}>
                     {filteredTaskIds.map((tId) => {
                         return (
                             <Task
@@ -139,13 +141,21 @@ export const Tasks = (props: Props) => {
     } else if (tasksStatus === 'loading') {
         content = <Loader />;
     } else {
-        content = <p>You dont have any tasks in this todolist yet!</p>;
+        content = (
+            <Typography>
+                You dont have any tasks in this todolist yet!
+            </Typography>
+        );
     }
 
     return (
         <>
-            <AddItemForm onAddItem={addTaskCallBack} disabled={disabled} />
-            <div style={{ border: '2px solid blue' }}>{content}</div>
+            <AddItemForm
+                onAddItem={addTaskCallBack}
+                disabled={disabled}
+                placeholder={'Task title'}
+            />
+            <div className={s.container}>{content}</div>
             {tasksCountForTodolistOnServer ?
                 <TasksPagination
                     disabled={disabled}

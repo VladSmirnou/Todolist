@@ -23,6 +23,9 @@ export const TasksPagination = (props: Props) => {
                 page={paginationPage}
                 onChange={handleChange}
                 disabled={disabled}
+                sx={{
+                    '& > ul': { justifyContent: 'center' },
+                }}
             />
         </Stack>
     );
