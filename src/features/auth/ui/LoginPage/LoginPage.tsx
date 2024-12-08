@@ -3,24 +3,19 @@ import { LoginForm } from './LoginForm/LoginForm';
 import { Title } from './Title/Title';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { selectIsLoggedIn } from '../../model/authSlice';
-import Container from '@mui/material/Container';
+import { Container } from '@/common/components/Container/Container';
 
 export const LoginPage = () => {
     const isLoggedIn = useAppSelector(selectIsLoggedIn);
 
     if (isLoggedIn) {
-        return <Navigate to={'/'} />;
+        return <Navigate to={'/'} replace />;
     }
 
     return (
-        <section>
-            <Container
-                maxWidth={'xl'}
-                sx={{ display: 'grid', justifyContent: 'center' }}
-            >
-                <Title />
-                <LoginForm />
-            </Container>
-        </section>
+        <Container sx={{ display: 'grid', justifyContent: 'center' }}>
+            <Title />
+            <LoginForm />
+        </Container>
     );
 };
