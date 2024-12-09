@@ -3,6 +3,7 @@ import { createAppSlice } from '@/common/utils/createAppSlice';
 import { AxiosError } from 'axios';
 import { authApi } from '../api/auth-api';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
+import { appStatusChanged } from '@/app/appSlice';
 
 const initialState = {
     isLoggedIn: false,
@@ -26,6 +27,7 @@ const authSlice = createAppSlice({
         login: create.asyncThunk(
             async (data: LoginFormData, { dispatch, rejectWithValue }) => {
                 try {
+                    dispatch(appStatusChanged('pending'));
                     const res = await authApi.login(data);
                     if (res.data.resultCode !== 0) {
                         if (res.data.fieldsErrors.length) {
@@ -36,6 +38,7 @@ const authSlice = createAppSlice({
                         return false;
                     }
                     localStorage.setItem('authToken', res.data.data.token);
+                    dispatch(appStatusChanged('idle'));
                     return true;
                 } catch (e) {
                     // AxiosError / Error -> e.message
@@ -52,6 +55,7 @@ const authSlice = createAppSlice({
         ),
         logout: create.asyncThunk(
             async (_, { dispatch }) => {
+                dispatch(appStatusChanged('pending'));
                 const userRemainsLoggedIn = true;
                 try {
                     const res = await authApi.logout();
@@ -63,6 +67,7 @@ const authSlice = createAppSlice({
                         );
                         return userRemainsLoggedIn;
                     }
+                    dispatch(appStatusChanged('idle'));
                     localStorage.removeItem('authToken');
                     return !userRemainsLoggedIn;
                 } catch (e) {

@@ -1,0 +1,9 @@
+.skeleton {
+    width: 357px;
+    height: min-content;
+    padding: 16px;
+    background-color: rgb(155, 155, 155);
+    border-radius: 4px;
+    display: grid;
+    row-gap: 15px;
+}

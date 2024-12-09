@@ -4,6 +4,7 @@ import { addTodolist } from '@/features/todolists/model/todolistSlice';
 import { Todolists } from '@/features/todolists/ui/Todolists/Todolists';
 import s from './Main.module.css';
 import { Container } from '@/common/components/Container/Container';
+import { MessagePopup } from '@/common/components/MessagePopup/MessagePopup';
 
 export const Main = () => {
     const dispatch = useAppDispatch();
@@ -16,6 +17,7 @@ export const Main = () => {
         <Container className={s.container}>
             <AddItemForm placeholder={'Todolist title'} onAddItem={addTodo} />
             <Todolists />
+            <MessagePopup />
         </Container>
     );
 };
