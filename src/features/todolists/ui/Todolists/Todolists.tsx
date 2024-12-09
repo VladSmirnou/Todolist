@@ -2,18 +2,18 @@ import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 import Typography from '@mui/material/Typography';
-import { useLayoutEffect } from 'react';
+import { useEffect } from 'react';
 import { fetchTasks } from '../../model/tasksSlice';
 import {
     fetchTodolists,
     selectIds,
     selectTodolistsStatus,
 } from '../../model/todolistSlice';
-import { TASKS_PER_PAGE } from '../../utils/constants/constants';
+import { INITIAL_PAGE, TASKS_PER_PAGE } from '../../utils/constants/constants';
+import { TodolistSkeleton } from './Skeletons/Skeleton/Skeleton';
 import { TodolistsSkeletons } from './Skeletons/Skeletons';
 import { Todolist } from './Todolist/Todolist';
 import s from './Todolists.module.css';
-import { TodolistSkeleton } from './Skeletons/Skeleton/Skeleton';
 
 export const Todolists = () => {
     const todolistsStatus = useAppSelector((state) =>
@@ -24,7 +24,7 @@ export const Todolists = () => {
 
     const todolistsIds = useAppSelector(selectIds);
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         // позволит не перезапрашивать таски после
         // повторных маунтов этого компонента.
         if (todolistsStatus === 'initialLoading') {
@@ -36,6 +36,7 @@ export const Todolists = () => {
                             fetchTasks({
                                 todolistId: id,
                                 count: TASKS_PER_PAGE,
+                                page: INITIAL_PAGE,
                             }),
                         );
                     });

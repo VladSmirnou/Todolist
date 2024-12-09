@@ -1,5 +1,4 @@
 import { AddItemForm } from '@/common/components/AddItemForm/AddItemForm';
-import { Loader } from '@/common/components/Loader/Loader';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
@@ -10,6 +9,8 @@ import {
     removeLocalTasks,
     selectFilteredTaskIds,
     selectTaskIdsForTodolist,
+    selectTasksStatus,
+    tasksStatusChanged,
 } from '@/features/todolists/model/tasksSlice';
 import {
     paginationPageChanged,
@@ -18,15 +19,15 @@ import {
 } from '@/features/todolists/model/todolistSlice';
 import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
 import type { FilterValue } from '@/features/todolists/utils/types/todolist.types';
+import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { shallowEqual } from 'react-redux';
 import { FilterButtons } from '../FilterButtons/FilterButtons';
 import { TasksPagination } from '../TasksPagination/TasksPagination';
+import { TaskSkeleton } from './Skeletons/Skeleton/Skeleton';
+import { TasksSkeletons } from './Skeletons/Skeletons';
 import { Task } from './Task/Task';
 import s from './Tasks.module.css';
-import Typography from '@mui/material/Typography';
-
-type TasksStatus = 'idle' | 'loading' | 'success' | 'failure';
 
 type Props = {
     disabled: boolean;
@@ -42,7 +43,10 @@ export const Tasks = (props: Props) => {
         selectPaginationPage(state.todolistEntities, todolistId),
     );
 
-    const [tasksStatus, setTaskStatus] = useState<TasksStatus>('idle');
+    const tasksStatus = useAppSelector((state) =>
+        selectTasksStatus(state.todolistEntities, todolistId),
+    );
+
     const [filterValue, setFilterValue] = useState<FilterValue>('all');
 
     const tasksCountForTodolistOnServer = useAppSelector((state) =>
@@ -68,7 +72,9 @@ export const Tasks = (props: Props) => {
         if (nextPage === paginationPage) {
             return;
         }
-        setTaskStatus('loading');
+        dispatch(
+            tasksStatusChanged({ todolistId, nextTasksStatus: 'changingPage' }),
+        );
         dispatch(
             fetchTasks({
                 todolistId,
@@ -78,23 +84,25 @@ export const Tasks = (props: Props) => {
         )
             .unwrap()
             .then(() => {
-                setTaskStatus('success');
                 setFilterValue('all');
                 dispatch(removeLocalTasks(taskIds));
                 dispatch(paginationPageChanged({ todolistId, nextPage }));
             })
             .catch((error: string) => {
                 dispatchAppStatusData(dispatch, 'failed', error);
-                setTaskStatus('failure');
             });
     };
 
     const addTaskCallBack = async (title: string) => {
-        setTaskStatus('loading');
+        dispatch(
+            tasksStatusChanged({ todolistId, nextTasksStatus: 'loading' }),
+        );
         try {
             await dispatch(addTask({ todolistId, title })).unwrap();
         } catch {
-            setTaskStatus('failure');
+            dispatch(
+                tasksStatusChanged({ todolistId, nextTasksStatus: 'failure' }),
+            );
             return;
         }
         try {
@@ -108,9 +116,18 @@ export const Tasks = (props: Props) => {
             if (taskIds.length === TASKS_PER_PAGE) {
                 dispatch(removeLocalOldestTaskForTodolist(taskIds.at(-1)!));
             }
-            setTaskStatus('success');
+            dispatch(
+                tasksStatusChanged({ todolistId, nextTasksStatus: 'success' }),
+            );
+            dispatchAppStatusData(
+                dispatch,
+                'succeeded',
+                'Task was successfully added',
+            );
         } catch {
-            setTaskStatus('failure');
+            dispatch(
+                tasksStatusChanged({ todolistId, nextTasksStatus: 'failure' }),
+            );
         }
     };
 
@@ -123,7 +140,7 @@ export const Tasks = (props: Props) => {
     if (filteredTaskIds.length > 0) {
         content = (
             <>
-                {tasksStatus === 'loading' && <Loader />}
+                {tasksStatus === 'loading' && <TaskSkeleton />}
                 <ul className={s.tasksList}>
                     {filteredTaskIds.map((tId) => {
                         return (
@@ -138,8 +155,10 @@ export const Tasks = (props: Props) => {
                 </ul>
             </>
         );
+    } else if (tasksStatus === 'initialLoading') {
+        content = <TasksSkeletons />;
     } else if (tasksStatus === 'loading') {
-        content = <Loader />;
+        content = <TaskSkeleton />;
     } else {
         content = (
             <Typography>
