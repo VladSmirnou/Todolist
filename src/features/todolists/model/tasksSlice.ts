@@ -8,6 +8,7 @@ import { AxiosError } from 'axios';
 import { tasksApi } from '../api/tasksApi';
 import type { FilterValue, Task } from '../utils/types/todolist.types';
 import { setTasksCount } from './todolistSlice';
+import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 
 const tasksAdapter = createEntityAdapter<Task>();
 
@@ -72,6 +73,11 @@ const tasksSlise = createAppSlice({
                 try {
                     const res = await tasksApi.addTask(args);
                     serverErrorHandler(res.data);
+                    dispatchAppStatusData(
+                        dispatch,
+                        'succeeded',
+                        'Task was successfully added',
+                    );
                     return res.data.data.item;
                 } catch (e) {
                     const errorMessage = clientErrorHandler(e, dispatch);
