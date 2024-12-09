@@ -40,7 +40,7 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 
-type AppActionType =
+export type AppActionType =
     | ReturnType<typeof appStatusChanged>
     | ReturnType<typeof appStatusTextSet>
     | ReturnType<typeof removeLocalTask>

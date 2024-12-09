@@ -3,10 +3,11 @@ import {
     appStatusChanged,
     appStatusTextSet,
 } from '@/app/appSlice';
-import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
+import type { AppActionType } from '@/app/store';
+import { ThunkDispatch } from '@reduxjs/toolkit';
 
 export const dispatchAppStatusData = (
-    dispatch: ThunkDispatch<unknown, unknown, UnknownAction>,
+    dispatch: ThunkDispatch<unknown, unknown, AppActionType>,
     status: AppStatus,
     message: string,
 ) => {
