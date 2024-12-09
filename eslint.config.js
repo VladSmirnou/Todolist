@@ -60,6 +60,10 @@ export default tseslint.config(
                 'warn',
                 { allowConstantExport: true },
             ],
+            '@typescript-eslint/no-floating-promises': 'off',
+            '@typescript-eslint/no-misused-promises': 'off',
+            '@typescript-eslint/no-empty-object-type': 'off',
+            '@typescript-eslint/unbound-method': 'off',
         },
     },
 );

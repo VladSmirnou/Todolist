@@ -1,0 +1,9 @@
+.container {
+    margin: 15px 0 15px;
+}
+
+.tasksList {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
