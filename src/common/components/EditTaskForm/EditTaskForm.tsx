@@ -5,18 +5,23 @@ import { selectById, updateTask } from '@/features/todolists/model/tasksSlice';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import { ChangeEvent, FormEvent, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Container } from '../Container/Container';
 import s from './EditTaskForm.module.css';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
-import { TaskDoesntExist } from '../TaskDoesnExist/TaskDoesntExist';
+import { TaskDoesntExist } from '../TaskDoesntExist/TaskDoesntExist';
+import { selectTodolistsStatus } from '@/features/todolists/model/todolistSlice';
 
 type FormStatus = 'idle' | 'updating';
 
 export const EditTaskForm = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+
+    const todolistStatus = useAppSelector((state) =>
+        selectTodolistsStatus(state.todolistEntities),
+    );
 
     const { taskId } = useParams<TaskIdParams>();
 
@@ -25,6 +30,10 @@ export const EditTaskForm = () => {
     const [title, setTitle] = useState(task?.title ?? '');
     const [error, setError] = useState<string | null>(null);
     const [status, setStatus] = useState<FormStatus>('idle');
+
+    if (todolistStatus === 'initialLoading') {
+        return <Navigate to={'/'} replace />;
+    }
 
     if (!task) {
         return <TaskDoesntExist />;

@@ -1,12 +1,12 @@
 import { RootState } from '@/app/store';
 import { clientErrorHandler } from '@/common/utils/clientErrorHandler';
 import { createAppSlice } from '@/common/utils/createAppSlice';
-import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 import { serverErrorHandler } from '@/common/utils/serverErrorHandler';
 import { createEntityAdapter } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { todolistsApi } from '../api/todolistsApi';
 import type { Todolist } from '../utils/types/todolist.types';
+import { INITIAL_PAGE } from '../utils/constants/constants';
 
 type TodolistsStatus =
     | 'idle'
@@ -42,6 +42,9 @@ const todolistsSlice = createAppSlice({
             {
                 fulfilled: (state, action) => {
                     state.todolistsStatus = 'success';
+                    action.payload.forEach(({ id }) => {
+                        state.paginationPageForTodolist[id] = INITIAL_PAGE;
+                    });
                     todolistsAdapter.setAll(state, action);
                 },
                 rejected: (state) => {
@@ -54,11 +57,6 @@ const todolistsSlice = createAppSlice({
                 try {
                     const res = await todolistsApi.addTodolist(todolistTitle);
                     serverErrorHandler(res.data);
-                    dispatchAppStatusData(
-                        dispatch,
-                        'succeeded',
-                        'Todolist was successfully added',
-                    );
                     return res.data.data.item;
                 } catch (e) {
                     const errorMessage = clientErrorHandler(e, dispatch);
@@ -72,7 +70,7 @@ const todolistsSlice = createAppSlice({
                 fulfilled: (state, action) => {
                     const { id } = action.payload;
                     state.todolistsStatus = 'success';
-                    state.paginationPageForTodolist[id] = 1;
+                    state.paginationPageForTodolist[id] = INITIAL_PAGE;
                     state.tasksCountForTodolistOnServer[id] = 0;
                     todolistsAdapter.addOne(state, action);
                 },

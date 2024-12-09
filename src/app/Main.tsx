@@ -5,12 +5,21 @@ import { Todolists } from '@/features/todolists/ui/Todolists/Todolists';
 import s from './Main.module.css';
 import { Container } from '@/common/components/Container/Container';
 import { MessagePopup } from '@/common/components/MessagePopup/MessagePopup';
+import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 
 export const Main = () => {
     const dispatch = useAppDispatch();
 
     const addTodo = (todolistTitle: string) => {
-        dispatch(addTodolist(todolistTitle));
+        dispatch(addTodolist(todolistTitle))
+            .unwrap()
+            .then(() => {
+                dispatchAppStatusData(
+                    dispatch,
+                    'succeeded',
+                    'Todolist was successfully added',
+                );
+            });
     };
 
     return (

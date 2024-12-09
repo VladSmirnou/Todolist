@@ -5,11 +5,13 @@ import { Main } from './Main';
 import { ProtectedRoute } from './ProtectedRoute';
 import { SingleTaskPage } from '@/common/components/SingleTaskPage/SingleTaskPage';
 import { EditTaskForm } from '@/common/components/EditTaskForm/EditTaskForm';
+import { ErrorPage } from '@/common/components/ErrorPage/ErrorPage';
 
 export const appRouter = createBrowserRouter([
     {
         path: '/',
         element: <App />,
+        errorElement: <ErrorPage />,
         children: [
             {
                 element: <ProtectedRoute />,

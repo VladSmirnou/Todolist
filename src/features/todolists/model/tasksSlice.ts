@@ -8,7 +8,6 @@ import { AxiosError } from 'axios';
 import { tasksApi } from '../api/tasksApi';
 import type { FilterValue, Task } from '../utils/types/todolist.types';
 import { setTasksCount } from './todolistSlice';
-import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 
 const tasksAdapter = createEntityAdapter<Task>();
 
@@ -31,25 +30,39 @@ const tasksAdapter = createEntityAdapter<Task>();
 // page 1 becomes:
 // [1 2 4]
 
+type TasksStatus =
+    | 'idle'
+    | 'loading'
+    | 'success'
+    | 'failure'
+    | 'deleting'
+    | 'changingPage'
+    | 'initialLoading';
+
 const tasksSlise = createAppSlice({
     name: 'tasks',
-    initialState: tasksAdapter.getInitialState(),
+    initialState: tasksAdapter.getInitialState({
+        tasksStatus: {} as { [key: string]: TasksStatus },
+    }),
     reducers: (create) => ({
         fetchTasks: create.asyncThunk<
-            Array<Task>,
-            { todolistId: string; count: number; page?: number }
+            { todolistId: string; tasks: Array<Task> },
+            { todolistId: string; count: number; page: number }
         >(
             async (args, { rejectWithValue, dispatch, getState }) => {
-                const todolistPaginationPage = (getState() as RootState)
-                    .todolistEntities.todolists.paginationPageForTodolist[
-                    args.todolistId
-                ];
-                const requestArgs = {
-                    ...args,
-                    page: args.page ?? todolistPaginationPage,
-                };
+                const status = (getState() as RootState).todolistEntities.tasks
+                    .tasksStatus[args.todolistId];
+                if (status !== 'deleting' && status !== 'changingPage') {
+                    dispatch(
+                        tasksStatusChanged({
+                            todolistId: args.todolistId,
+                            nextTasksStatus:
+                                status ? 'loading' : 'initialLoading',
+                        }),
+                    );
+                }
                 try {
-                    const res = await tasksApi.fetchTasks(requestArgs);
+                    const res = await tasksApi.fetchTasks(args);
                     const { totalCount, items } = res.data;
                     dispatch(
                         setTasksCount({
@@ -57,13 +70,22 @@ const tasksSlise = createAppSlice({
                             tasksCount: totalCount,
                         }),
                     );
-                    return items;
+                    return {
+                        todolistId: args.todolistId,
+                        tasks: items,
+                    };
                 } catch (e) {
                     const errorMessage = (e as AxiosError | Error).message;
                     return rejectWithValue(errorMessage);
                 }
             },
-            { fulfilled: tasksAdapter.addMany },
+            {
+                fulfilled: (state, action) => {
+                    const { todolistId, tasks } = action.payload;
+                    state.tasksStatus[todolistId] = 'success';
+                    tasksAdapter.addMany(state, tasks);
+                },
+            },
         ),
         addTask: create.asyncThunk<Task, { todolistId: string; title: string }>(
             async (
@@ -73,11 +95,6 @@ const tasksSlise = createAppSlice({
                 try {
                     const res = await tasksApi.addTask(args);
                     serverErrorHandler(res.data);
-                    dispatchAppStatusData(
-                        dispatch,
-                        'succeeded',
-                        'Task was successfully added',
-                    );
                     return res.data.data.item;
                 } catch (e) {
                     const errorMessage = clientErrorHandler(e, dispatch);
@@ -140,7 +157,18 @@ const tasksSlise = createAppSlice({
         removeLocalOldestTaskForTodolist: create.reducer(
             tasksAdapter.removeOne,
         ),
+        tasksStatusChanged: create.reducer<{
+            todolistId: string;
+            nextTasksStatus: TasksStatus;
+        }>((state, action) => {
+            const { todolistId, nextTasksStatus } = action.payload;
+            state.tasksStatus[todolistId] = nextTasksStatus;
+        }),
     }),
+    selectors: {
+        selectTasksStatus: (state, todolistId: string) =>
+            state.tasksStatus[todolistId],
+    },
 });
 
 export const { reducer: tasksReducer } = tasksSlise;
@@ -152,7 +180,10 @@ export const {
     removeLocalTasks,
     removeLocalOldestTaskForTodolist,
     removeLocalTask,
+    tasksStatusChanged,
 } = tasksSlise.actions;
+export const { selectTasksStatus } = tasksSlise.selectors;
+
 export const { selectIds, selectById, selectEntities } =
     tasksAdapter.getSelectors(
         (state: RootState) => state.todolistEntities.tasks,

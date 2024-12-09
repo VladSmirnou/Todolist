@@ -7,6 +7,7 @@ import {
     removeLocalTask,
     removeLocalTasks,
     tasksReducer,
+    tasksStatusChanged,
 } from '@/features/todolists/model/tasksSlice';
 import {
     paginationPageChanged,
@@ -47,7 +48,8 @@ export type AppActionType =
     | ReturnType<typeof removeLocalTasks>
     | ReturnType<typeof removeLocalOldestTaskForTodolist>
     | ReturnType<typeof setTasksCount>
-    | ReturnType<typeof paginationPageChanged>;
+    | ReturnType<typeof paginationPageChanged>
+    | ReturnType<typeof tasksStatusChanged>;
 
 // typeof store.dispatch returns ThunkDispatch<RootState, undefined, UnknownAction>
 // so I will be able to dispatch everything without any type checking
