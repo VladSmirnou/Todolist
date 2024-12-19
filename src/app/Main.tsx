@@ -8,7 +8,6 @@ import { MessagePopup } from '@/common/components/MessagePopup/MessagePopup';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 
 export const Main = () => {
-    console.log('rendering main');
     const dispatch = useAppDispatch();
 
     const addTodo = (todolistTitle: string) => {

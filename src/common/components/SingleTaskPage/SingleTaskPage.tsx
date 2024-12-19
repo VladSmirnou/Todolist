@@ -2,11 +2,7 @@ import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { TaskIdParams } from '@/common/types/types';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
-import {
-    fetchTasks,
-    selectById,
-    selectTasksStatus,
-} from '@/features/todolists/model/tasksSlice';
+import { fetchTasks, selectById } from '@/features/todolists/model/tasksSlice';
 import {
     fetchTodolists,
     selectTodolistsStatus,
@@ -18,7 +14,7 @@ import {
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Typography from '@mui/material/Typography';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Container } from '../Container/Container';
 import { TaskDoesntExist } from '../TaskDoesntExist/TaskDoesntExist';
@@ -34,8 +30,9 @@ export const SingleTaskPage = () => {
     const { taskId } = useParams<TaskIdParams>();
     const task = useAppSelector((state) => selectById(state, taskId!));
 
-    const tasksStatus = useAppSelector((state) =>
-        selectTasksStatus(state.todolistEntities, task?.todoListId),
+    // if there is no task, then 'taskStatus' will never change
+    const [tasksLoaded, setTasksLoaded] = useState(
+        todolistsStatus === 'initialLoading' ? false : true,
     );
 
     // Maybe a user saved a single task in the bookmarks,
@@ -48,8 +45,8 @@ export const SingleTaskPage = () => {
             dispatch(fetchTodolists())
                 .unwrap()
                 .then((todolists) => {
-                    todolists.forEach(({ id }) => {
-                        dispatch(
+                    const pr = todolists.map(({ id }) => {
+                        return dispatch(
                             fetchTasks({
                                 todolistId: id,
                                 count: TASKS_PER_PAGE,
@@ -57,6 +54,7 @@ export const SingleTaskPage = () => {
                             }),
                         );
                     });
+                    Promise.all(pr).finally(() => setTasksLoaded(true));
                 })
                 .catch((err: string) => {
                     dispatchAppStatusData(dispatch, 'failed', err);
@@ -64,7 +62,7 @@ export const SingleTaskPage = () => {
         }
     }, [dispatch, todolistsStatus]);
 
-    if (!tasksStatus) {
+    if (!tasksLoaded) {
         return <SingleTaskPageSkeleton />;
     }
 
