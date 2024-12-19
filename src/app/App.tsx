@@ -8,7 +8,6 @@ import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 export const App = () => {
-    console.log('rendering app');
     const dispatch = useAppDispatch();
 
     const [meRequestIsFinished, setMeRequestIsFinished] =

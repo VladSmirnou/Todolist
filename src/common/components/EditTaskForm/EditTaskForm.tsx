@@ -43,6 +43,9 @@ export const EditTaskForm = () => {
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (title === task.title) {
+            return navigate(`/tasks/${taskId}`, { replace: true });
+        }
         if (!title.trim()) {
             setError('Title cannot be empty!');
         } else {

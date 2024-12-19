@@ -3,7 +3,7 @@ import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 import Typography from '@mui/material/Typography';
 import { useEffect } from 'react';
-import { fetchTasks } from '../../model/tasksSlice';
+import { fetchTasks, tasksStatusChanged } from '../../model/tasksSlice';
 import {
     fetchTodolists,
     selectIds,
@@ -16,7 +16,6 @@ import { Todolist } from './Todolist/Todolist';
 import s from './Todolists.module.css';
 
 export const Todolists = () => {
-    console.log('rendering todolists');
     const todolistsStatus = useAppSelector((state) =>
         selectTodolistsStatus(state.todolistEntities),
     );
@@ -26,13 +25,17 @@ export const Todolists = () => {
     const todolistsIds = useAppSelector(selectIds);
 
     useEffect(() => {
-        // позволит не перезапрашивать таски после
-        // повторных маунтов этого компонента.
         if (todolistsStatus === 'initialLoading') {
             dispatch(fetchTodolists())
                 .unwrap()
                 .then((todolists) => {
                     todolists.forEach(({ id }) => {
+                        dispatch(
+                            tasksStatusChanged({
+                                todolistId: id,
+                                nextTasksStatus: 'initialLoading',
+                            }),
+                        );
                         dispatch(
                             fetchTasks({
                                 todolistId: id,

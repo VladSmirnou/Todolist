@@ -8,7 +8,7 @@ import { todolistsApi } from '../api/todolistsApi';
 import type { Todolist } from '../utils/types/todolist.types';
 import { INITIAL_PAGE } from '../utils/constants/constants';
 
-type TodolistsStatus =
+export type TodolistsStatus =
     | 'idle'
     | 'initialLoading'
     | 'loading'

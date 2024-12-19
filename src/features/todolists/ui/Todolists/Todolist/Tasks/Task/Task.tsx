@@ -7,7 +7,6 @@ import {
     removeLocalTask,
     removeTask,
     selectById,
-    tasksStatusChanged,
     updateTask,
 } from '@/features/todolists/model/tasksSlice';
 import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
@@ -61,12 +60,6 @@ export const Task = (props: Props) => {
     const handleDeleteTask = async () => {
         setTaskStatus('deleting');
         try {
-            dispatch(
-                tasksStatusChanged({
-                    todolistId: task.todoListId,
-                    nextTasksStatus: 'deleting',
-                }),
-            );
             await dispatch(removeTask({ taskId, todoListId })).unwrap();
         } catch {
             setTaskStatus('idle');

@@ -7,7 +7,7 @@ import { createEntityAdapter } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { tasksApi } from '../api/tasksApi';
 import type { FilterValue, Task } from '../utils/types/todolist.types';
-import { setTasksCount } from './todolistSlice';
+import { removeTodolist, setTasksCount } from './todolistSlice';
 
 const tasksAdapter = createEntityAdapter<Task>();
 
@@ -35,8 +35,6 @@ type TasksStatus =
     | 'loading'
     | 'success'
     | 'failure'
-    | 'deleting'
-    | 'changingPage'
     | 'initialLoading';
 
 const tasksSlise = createAppSlice({
@@ -49,18 +47,7 @@ const tasksSlise = createAppSlice({
             { todolistId: string; tasks: Array<Task> },
             { todolistId: string; count: number; page: number }
         >(
-            async (args, { rejectWithValue, dispatch, getState }) => {
-                const status = (getState() as RootState).todolistEntities.tasks
-                    .tasksStatus[args.todolistId];
-                if (status !== 'deleting' && status !== 'changingPage') {
-                    dispatch(
-                        tasksStatusChanged({
-                            todolistId: args.todolistId,
-                            nextTasksStatus:
-                                status ? 'loading' : 'initialLoading',
-                        }),
-                    );
-                }
+            async (args, { rejectWithValue, dispatch }) => {
                 try {
                     const res = await tasksApi.fetchTasks(args);
                     const { totalCount, items } = res.data;
@@ -165,9 +152,20 @@ const tasksSlise = createAppSlice({
             state.tasksStatus[todolistId] = nextTasksStatus;
         }),
     }),
+    extraReducers: (builder) => {
+        builder.addCase(removeTodolist.fulfilled, (state, action) => {
+            const taskIdsToRemove = Object.values(state.entities)
+                .filter(({ todoListId }) => {
+                    return todoListId === action.payload;
+                })
+                .map(({ id }) => id);
+            tasksAdapter.removeMany(state, taskIdsToRemove);
+        });
+    },
     selectors: {
-        selectTasksStatus: (state, todolistId: string) =>
-            state.tasksStatus[todolistId],
+        selectTasksStatus: (state, todolistId: string) => {
+            return state.tasksStatus[todolistId];
+        },
     },
 });
 

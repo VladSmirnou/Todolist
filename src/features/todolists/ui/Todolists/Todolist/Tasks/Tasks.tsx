@@ -73,7 +73,10 @@ export const Tasks = (props: Props) => {
             return;
         }
         dispatch(
-            tasksStatusChanged({ todolistId, nextTasksStatus: 'changingPage' }),
+            tasksStatusChanged({
+                todolistId,
+                nextTasksStatus: 'initialLoading',
+            }),
         );
         dispatch(
             fetchTasks({
@@ -135,28 +138,32 @@ export const Tasks = (props: Props) => {
         setFilterValue(nextFilterValue);
     };
 
+    let JSXTasks = filteredTaskIds.map((tId) => {
+        return (
+            <Task
+                key={tId}
+                taskId={tId}
+                disabled={disabled}
+                page={paginationPage}
+            />
+        );
+    });
+
+    if (tasksStatus === 'loading' && JSXTasks.length === TASKS_PER_PAGE) {
+        JSXTasks = JSXTasks.slice(0, 4);
+    }
+
     let content;
 
-    if (filteredTaskIds.length > 0) {
+    if (tasksStatus === 'initialLoading') {
+        content = <TasksSkeletons />;
+    } else if (filteredTaskIds.length > 0) {
         content = (
             <>
                 {tasksStatus === 'loading' && <TaskSkeleton />}
-                <ul className={s.tasksList}>
-                    {filteredTaskIds.map((tId) => {
-                        return (
-                            <Task
-                                key={tId}
-                                taskId={tId}
-                                disabled={disabled}
-                                page={paginationPage}
-                            />
-                        );
-                    })}
-                </ul>
+                <ul className={s.tasksList}>{JSXTasks}</ul>
             </>
         );
-    } else if (tasksStatus === 'initialLoading') {
-        content = <TasksSkeletons />;
     } else if (tasksStatus === 'loading') {
         content = <TaskSkeleton />;
     } else {
