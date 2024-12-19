@@ -1,3 +1,4 @@
+import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { TaskIdParams } from '@/common/types/types';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
@@ -18,15 +19,13 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Typography from '@mui/material/Typography';
 import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Container } from '../Container/Container';
 import { TaskDoesntExist } from '../TaskDoesntExist/TaskDoesntExist';
 import s from './SingleTaskPage.module.css';
-import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { SingleTaskPageSkeleton } from './Skeleton/Skeleton';
 
 export const SingleTaskPage = () => {
-    const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const todolistsStatus = useAppSelector((state) =>
         selectTodolistsStatus(state.todolistEntities),
@@ -73,10 +72,6 @@ export const SingleTaskPage = () => {
         return <TaskDoesntExist />;
     }
 
-    const redirectToUpdateForm = () => {
-        navigate(`/update/${taskId}`, { replace: true });
-    };
-
     return (
         <Container className={s.container}>
             <Typography component={'h2'} variant={'h2'}>
@@ -84,8 +79,12 @@ export const SingleTaskPage = () => {
             </Typography>
             <Typography>{task.description}</Typography>
             <ButtonGroup variant="text">
-                <Button onClick={redirectToUpdateForm}>edit task</Button>
-                <Button onClick={() => navigate(-1)}>back</Button>
+                <Button component={Link} to={`/update/${taskId}`} replace>
+                    edit task
+                </Button>
+                <Button component={Link} to={'/'}>
+                    back to todolists
+                </Button>
             </ButtonGroup>
         </Container>
     );

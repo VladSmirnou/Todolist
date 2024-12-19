@@ -45,18 +45,3 @@ export const Header = () => {
         </Box>
     );
 };
-
-// export const Header = () => {
-//     const dispatch = useAppDispatch();
-//     const isLoggedIn = useAppSelector(selectIsLoggedIn);
-
-//     const handleLogout = () => {
-//         dispatch(logout());
-//     };
-
-//     return (
-//         <header style={{ backgroundColor: 'green' }}>
-//             {isLoggedIn && <button onClick={handleLogout}>logout</button>}
-//         </header>
-//     );
-// };
