@@ -16,6 +16,7 @@ import { Todolist } from './Todolist/Todolist';
 import s from './Todolists.module.css';
 
 export const Todolists = () => {
+    console.log('rendering todolists');
     const todolistsStatus = useAppSelector((state) =>
         selectTodolistsStatus(state.todolistEntities),
     );
