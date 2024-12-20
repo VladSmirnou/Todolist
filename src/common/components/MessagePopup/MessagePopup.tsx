@@ -1,4 +1,5 @@
 import { selectAppStatus, selectAppStatusText } from '@/app/appSlice';
+import { AppStatus } from '@/common/enums/enums';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
@@ -10,7 +11,8 @@ export const MessagePopup = () => {
     const appStatusText = useAppSelector(selectAppStatusText);
     const dispatch = useAppDispatch();
 
-    const open = appStatus === 'failed' || appStatus === 'succeeded';
+    const open =
+        appStatus === AppStatus.FAILED || appStatus === AppStatus.SUCCEEDED;
 
     if (!open) {
         return;
@@ -26,7 +28,7 @@ export const MessagePopup = () => {
         if (reason === 'clickaway') {
             return;
         }
-        dispatchAppStatusData(dispatch, 'idle', '');
+        dispatchAppStatusData(dispatch, AppStatus.IDLE, '');
     };
 
     return (
@@ -39,7 +41,9 @@ export const MessagePopup = () => {
             >
                 <Alert
                     onClose={handleClose}
-                    severity={appStatus === 'failed' ? 'error' : 'success'}
+                    severity={
+                        appStatus === AppStatus.FAILED ? 'error' : 'success'
+                    }
                     variant="filled"
                     sx={{ width: '100%' }}
                 >

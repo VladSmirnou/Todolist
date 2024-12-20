@@ -7,6 +7,7 @@ import {
     removeLocalTask,
     removeTask,
     selectById,
+    tasksStatusChanged,
     updateTask,
 } from '@/features/todolists/model/tasksSlice';
 import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
@@ -16,6 +17,7 @@ import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import { ChangeEvent, useState } from 'react';
 import s from './Task.module.css';
+import { TasksStatus } from '@/features/todolists/utils/enums/enums';
 
 type TaskStatus = 'idle' | 'deleting' | 'changingStatus' | 'changingTitle';
 
@@ -59,10 +61,22 @@ export const Task = (props: Props) => {
 
     const handleDeleteTask = async () => {
         setTaskStatus('deleting');
+        dispatch(
+            tasksStatusChanged({
+                todolistId: todoListId,
+                nextTasksStatus: TasksStatus.DELETING_TASK,
+            }),
+        );
         try {
             await dispatch(removeTask({ taskId, todoListId })).unwrap();
         } catch {
             setTaskStatus('idle');
+            dispatch(
+                tasksStatusChanged({
+                    todolistId: todoListId,
+                    nextTasksStatus: TasksStatus.IDLE,
+                }),
+            );
             return;
         }
         try {
@@ -72,7 +86,7 @@ export const Task = (props: Props) => {
                     count: TASKS_PER_PAGE,
                     page,
                 }),
-            ).unwrap();
+            );
         } finally {
             // Если таск был удален с сервера успешно, мне не важно как завершиться
             // fetch запрос, мне надо удалить таск локально, но только после того,
@@ -80,6 +94,12 @@ export const Task = (props: Props) => {
             dispatch(removeLocalTask(taskId));
         }
         setTaskStatus('idle');
+        dispatch(
+            tasksStatusChanged({
+                todolistId: todoListId,
+                nextTasksStatus: TasksStatus.IDLE,
+            }),
+        );
     };
 
     const cx = bindClasses({ taskTitleDisabled: s.taskTitleDisabled });

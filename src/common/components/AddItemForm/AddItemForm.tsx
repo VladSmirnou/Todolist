@@ -7,7 +7,6 @@ type Props = {
     disabled?: boolean;
     onAddItem: (itemName: string) => void;
     placeholder: string;
-    // className?: string;
 };
 
 export const AddItemForm = (props: Props) => {

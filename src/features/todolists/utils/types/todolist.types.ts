@@ -37,8 +37,6 @@ export type NewTask = {
     item: Task;
 };
 
-export type FilterValue = 'all' | 'active' | 'completed';
-
 export type UpdateModel = {
     description: string;
     title: string;

@@ -20,6 +20,8 @@ import { Container } from '../Container/Container';
 import { TaskDoesntExist } from '../TaskDoesntExist/TaskDoesntExist';
 import s from './SingleTaskPage.module.css';
 import { SingleTaskPageSkeleton } from './Skeleton/Skeleton';
+import { AppStatus, TodolistsStatus } from '@/common/enums/enums';
+import { PATH } from '@/app/router/routerConfig';
 
 export const SingleTaskPage = () => {
     const dispatch = useAppDispatch();
@@ -32,7 +34,7 @@ export const SingleTaskPage = () => {
 
     // if there is no task, then 'taskStatus' will never change
     const [tasksLoaded, setTasksLoaded] = useState(
-        todolistsStatus !== 'initialLoading',
+        todolistsStatus !== TodolistsStatus.INITIAL_LOADING,
     );
 
     // Maybe a user saved a single task in the bookmarks,
@@ -41,7 +43,7 @@ export const SingleTaskPage = () => {
     // so I need to fetch them here as well if the user is logged
     // in but there are no todolists yet.
     useEffect(() => {
-        if (todolistsStatus === 'initialLoading') {
+        if (todolistsStatus === TodolistsStatus.INITIAL_LOADING) {
             dispatch(fetchTodolists())
                 .unwrap()
                 .then((todolists) => {
@@ -57,7 +59,7 @@ export const SingleTaskPage = () => {
                     return Promise.all(pr);
                 })
                 .catch((err: string) => {
-                    dispatchAppStatusData(dispatch, 'failed', err);
+                    dispatchAppStatusData(dispatch, AppStatus.FAILED, err);
                 })
                 .finally(() => setTasksLoaded(true));
         }
@@ -81,7 +83,7 @@ export const SingleTaskPage = () => {
                 <Button component={Link} to={`/update/${taskId}`} replace>
                     edit task
                 </Button>
-                <Button component={Link} to={'/'}>
+                <Button component={Link} to={PATH.root}>
                     back to todolists
                 </Button>
             </ButtonGroup>

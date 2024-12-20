@@ -1,4 +1,5 @@
 import { AddItemForm } from '@/common/components/AddItemForm/AddItemForm';
+import { AppStatus } from '@/common/enums/enums';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
@@ -18,7 +19,6 @@ import {
     selectTasksCountForTodolistOnServer,
 } from '@/features/todolists/model/todolistSlice';
 import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
-import type { FilterValue } from '@/features/todolists/utils/types/todolist.types';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { shallowEqual } from 'react-redux';
@@ -28,6 +28,10 @@ import { TaskSkeleton } from './Skeletons/Skeleton/Skeleton';
 import { TasksSkeletons } from './Skeletons/Skeletons';
 import { Task } from './Task/Task';
 import s from './Tasks.module.css';
+import {
+    FilterValue,
+    TasksStatus,
+} from '@/features/todolists/utils/enums/enums';
 
 type Props = {
     disabled: boolean;
@@ -47,7 +51,9 @@ export const Tasks = (props: Props) => {
         selectTasksStatus(state.todolistEntities, todolistId),
     );
 
-    const [filterValue, setFilterValue] = useState<FilterValue>('all');
+    const [filterValue, setFilterValue] = useState<FilterValue>(
+        FilterValue.ALL,
+    );
 
     const tasksCountForTodolistOnServer = useAppSelector((state) =>
         selectTasksCountForTodolistOnServer(state.todolistEntities, todolistId),
@@ -58,7 +64,7 @@ export const Tasks = (props: Props) => {
         shallowEqual,
     );
 
-    const filteredTaskIds = useAppSelector(
+    let filteredTaskIds = useAppSelector(
         (state) => selectFilteredTaskIds(state, taskIds, filterValue),
         shallowEqual,
     );
@@ -75,7 +81,7 @@ export const Tasks = (props: Props) => {
         dispatch(
             tasksStatusChanged({
                 todolistId,
-                nextTasksStatus: 'initialLoading',
+                nextTasksStatus: TasksStatus.INITIAL_LOADING,
             }),
         );
         dispatch(
@@ -87,24 +93,30 @@ export const Tasks = (props: Props) => {
         )
             .unwrap()
             .then(() => {
-                setFilterValue('all');
+                setFilterValue(FilterValue.ALL);
                 dispatch(removeLocalTasks(taskIds));
                 dispatch(paginationPageChanged({ todolistId, nextPage }));
             })
             .catch((error: string) => {
-                dispatchAppStatusData(dispatch, 'failed', error);
+                dispatchAppStatusData(dispatch, AppStatus.FAILED, error);
             });
     };
 
     const addTaskCallBack = async (title: string) => {
         dispatch(
-            tasksStatusChanged({ todolistId, nextTasksStatus: 'loading' }),
+            tasksStatusChanged({
+                todolistId,
+                nextTasksStatus: TasksStatus.LOADING,
+            }),
         );
         try {
             await dispatch(addTask({ todolistId, title })).unwrap();
         } catch {
             dispatch(
-                tasksStatusChanged({ todolistId, nextTasksStatus: 'failure' }),
+                tasksStatusChanged({
+                    todolistId,
+                    nextTasksStatus: TasksStatus.FAILURE,
+                }),
             );
             return;
         }
@@ -120,16 +132,22 @@ export const Tasks = (props: Props) => {
                 dispatch(removeLocalOldestTaskForTodolist(taskIds.at(-1)!));
             }
             dispatch(
-                tasksStatusChanged({ todolistId, nextTasksStatus: 'success' }),
+                tasksStatusChanged({
+                    todolistId,
+                    nextTasksStatus: TasksStatus.SUCCESS,
+                }),
             );
             dispatchAppStatusData(
                 dispatch,
-                'succeeded',
+                AppStatus.SUCCEEDED,
                 'Task was successfully added',
             );
         } catch {
             dispatch(
-                tasksStatusChanged({ todolistId, nextTasksStatus: 'failure' }),
+                tasksStatusChanged({
+                    todolistId,
+                    nextTasksStatus: TasksStatus.FAILURE,
+                }),
             );
         }
     };
@@ -138,7 +156,14 @@ export const Tasks = (props: Props) => {
         setFilterValue(nextFilterValue);
     };
 
-    let JSXTasks = filteredTaskIds.map((tId) => {
+    if (
+        tasksStatus === TasksStatus.LOADING &&
+        filteredTaskIds.length === TASKS_PER_PAGE
+    ) {
+        filteredTaskIds = filteredTaskIds.slice(0, TASKS_PER_PAGE - 1);
+    }
+
+    const JSXTasks = filteredTaskIds.map((tId) => {
         return (
             <Task
                 key={tId}
@@ -149,22 +174,18 @@ export const Tasks = (props: Props) => {
         );
     });
 
-    if (tasksStatus === 'loading' && JSXTasks.length === TASKS_PER_PAGE) {
-        JSXTasks = JSXTasks.slice(0, 4);
-    }
-
     let content;
 
-    if (tasksStatus === 'initialLoading') {
+    if (tasksStatus === TasksStatus.INITIAL_LOADING) {
         content = <TasksSkeletons />;
     } else if (filteredTaskIds.length > 0) {
         content = (
             <>
-                {tasksStatus === 'loading' && <TaskSkeleton />}
+                {tasksStatus === TasksStatus.LOADING && <TaskSkeleton />}
                 <ul className={s.tasksList}>{JSXTasks}</ul>
             </>
         );
-    } else if (tasksStatus === 'loading') {
+    } else if (tasksStatus === TasksStatus.LOADING) {
         content = <TaskSkeleton />;
     } else {
         content = (
@@ -178,7 +199,11 @@ export const Tasks = (props: Props) => {
         <>
             <AddItemForm
                 onAddItem={addTaskCallBack}
-                disabled={disabled}
+                disabled={
+                    disabled ||
+                    tasksStatus === TasksStatus.DELETING_TASK ||
+                    tasksStatus === TasksStatus.LOADING
+                }
                 placeholder={'Task title'}
             />
             <div className={s.container}>{content}</div>
