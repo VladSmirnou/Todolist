@@ -32,7 +32,7 @@ export const SingleTaskPage = () => {
 
     // if there is no task, then 'taskStatus' will never change
     const [tasksLoaded, setTasksLoaded] = useState(
-        todolistsStatus === 'initialLoading' ? false : true,
+        todolistsStatus !== 'initialLoading',
     );
 
     // Maybe a user saved a single task in the bookmarks,
@@ -54,11 +54,12 @@ export const SingleTaskPage = () => {
                             }),
                         );
                     });
-                    Promise.all(pr).finally(() => setTasksLoaded(true));
+                    return Promise.all(pr);
                 })
                 .catch((err: string) => {
                     dispatchAppStatusData(dispatch, 'failed', err);
-                });
+                })
+                .finally(() => setTasksLoaded(true));
         }
     }, [dispatch, todolistsStatus]);
 
