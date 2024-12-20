@@ -1,10 +1,7 @@
-import {
-    type AppStatus,
-    appStatusChanged,
-    appStatusTextSet,
-} from '@/app/appSlice';
+import { appStatusChanged, appStatusTextSet } from '@/app/appSlice';
 import type { AppActionType } from '@/app/store';
 import { ThunkDispatch } from '@reduxjs/toolkit';
+import { AppStatus } from '../enums/enums';
 
 export const dispatchAppStatusData = (
     dispatch: ThunkDispatch<unknown, unknown, AppActionType>,

@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import { LinearLoader } from '../LinearProgress/LinerProgress';
 import { selectAppStatus } from '@/app/appSlice';
+import { AppStatus } from '@/common/enums/enums';
 
 export const Header = () => {
     const dispatch = useAppDispatch();
@@ -40,7 +41,7 @@ export const Header = () => {
                         </Button>
                     )}
                 </Toolbar>
-                {appStatus === 'pending' && <LinearLoader />}
+                {appStatus === AppStatus.PENDING && <LinearLoader />}
             </AppBar>
         </Box>
     );

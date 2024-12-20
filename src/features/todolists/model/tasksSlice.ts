@@ -6,8 +6,9 @@ import { serverErrorHandler } from '@/common/utils/serverErrorHandler';
 import { createEntityAdapter } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { tasksApi } from '../api/tasksApi';
-import type { FilterValue, Task } from '../utils/types/todolist.types';
+import type { Task } from '../utils/types/todolist.types';
 import { removeTodolist, setTasksCount } from './todolistSlice';
+import { FilterValue, TasksStatus } from '../utils/enums/enums';
 
 const tasksAdapter = createEntityAdapter<Task>();
 
@@ -29,13 +30,6 @@ const tasksAdapter = createEntityAdapter<Task>();
 // removing task 3 locally
 // page 1 becomes:
 // [1 2 4]
-
-type TasksStatus =
-    | 'idle'
-    | 'loading'
-    | 'success'
-    | 'failure'
-    | 'initialLoading';
 
 const tasksSlise = createAppSlice({
     name: 'tasks',
@@ -69,7 +63,7 @@ const tasksSlise = createAppSlice({
             {
                 fulfilled: (state, action) => {
                     const { todolistId, tasks } = action.payload;
-                    state.tasksStatus[todolistId] = 'success';
+                    state.tasksStatus[todolistId] = TasksStatus.SUCCESS;
                     tasksAdapter.addMany(state, tasks);
                 },
             },
@@ -204,12 +198,12 @@ export const selectFilteredTaskIds = (
 ) => {
     let tasks = taskIds.map((id) => selectById(state, id));
 
-    if (filterValue !== 'all') {
+    if (filterValue !== FilterValue.ALL) {
         tasks = tasks.filter(
             (task) =>
-                (filterValue === 'active' &&
+                (filterValue === FilterValue.ACTIVE &&
                     task.status === TaskStatusCodes.New) ||
-                (filterValue === 'completed' &&
+                (filterValue === FilterValue.COMPLETED &&
                     task.status === TaskStatusCodes.Completed),
         );
     }
