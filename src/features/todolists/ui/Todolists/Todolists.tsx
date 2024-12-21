@@ -3,7 +3,7 @@ import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
 import Typography from '@mui/material/Typography';
 import { useEffect } from 'react';
-import { fetchTasks } from '../../model/tasksSlice';
+import { fetchTasks, tasksStatusChanged } from '../../model/tasksSlice';
 import {
     fetchTodolists,
     selectIds,
@@ -14,6 +14,8 @@ import { TodolistSkeleton } from './Skeletons/Skeleton/Skeleton';
 import { TodolistsSkeletons } from './Skeletons/Skeletons';
 import { Todolist } from './Todolist/Todolist';
 import s from './Todolists.module.css';
+import { AppStatus, TodolistsStatus } from '@/common/enums/enums';
+import { TasksStatus } from '../../utils/enums/enums';
 
 export const Todolists = () => {
     const todolistsStatus = useAppSelector((state) =>
@@ -25,13 +27,17 @@ export const Todolists = () => {
     const todolistsIds = useAppSelector(selectIds);
 
     useEffect(() => {
-        // позволит не перезапрашивать таски после
-        // повторных маунтов этого компонента.
-        if (todolistsStatus === 'initialLoading') {
+        if (todolistsStatus === TodolistsStatus.INITIAL_LOADING) {
             dispatch(fetchTodolists())
                 .unwrap()
                 .then((todolists) => {
                     todolists.forEach(({ id }) => {
+                        dispatch(
+                            tasksStatusChanged({
+                                todolistId: id,
+                                nextTasksStatus: TasksStatus.INITIAL_LOADING,
+                            }),
+                        );
                         dispatch(
                             fetchTasks({
                                 todolistId: id,
@@ -42,26 +48,28 @@ export const Todolists = () => {
                     });
                 })
                 .catch((err: string) => {
-                    dispatchAppStatusData(dispatch, 'failed', err);
+                    dispatchAppStatusData(dispatch, AppStatus.FAILED, err);
                 });
         }
     }, [dispatch, todolistsStatus]);
 
     let content;
 
-    if (todolistsIds.length > 0) {
+    if (todolistsStatus === TodolistsStatus.INITIAL_LOADING) {
+        content = <TodolistsSkeletons amount={4} />;
+    } else if (todolistsIds.length > 0) {
         content = (
             <>
-                {todolistsStatus === 'loading' && <TodolistSkeleton />}
+                {todolistsStatus === TodolistsStatus.LOADING && (
+                    <TodolistSkeleton />
+                )}
                 {todolistsIds.map((tId) => {
                     return <Todolist key={tId} todolistId={tId} />;
                 })}
             </>
         );
-    } else if (todolistsStatus === 'loading') {
+    } else if (todolistsStatus === TodolistsStatus.LOADING) {
         content = <TodolistSkeleton />;
-    } else if (todolistsStatus === 'initialLoading') {
-        content = <TodolistsSkeletons amount={4} />;
     } else {
         content = <Typography>You dont have any todolists yet!</Typography>;
     }

@@ -4,8 +4,7 @@ import { memo, useState } from 'react';
 import { Tasks } from './Tasks/Tasks';
 import { TodolistTitle } from './TodolistTitle/TodolistTitle';
 import Paper from '@mui/material/Paper';
-
-export type TodolistStatus = 'idle' | 'updating' | 'deleting';
+import { TodolistStatus } from '@/features/todolists/utils/enums/enums';
 
 type Props = {
     todolistId: string;
@@ -18,11 +17,12 @@ export const Todolist = memo(function Todolist(props: Props) {
 
     const { title } = todolist;
 
-    const [todolistStatus, setTodolistStatus] =
-        useState<TodolistStatus>('idle');
+    const [todolistStatus, setTodolistStatus] = useState<TodolistStatus>(
+        TodolistStatus.IDLE,
+    );
 
-    const deletingTodolist = todolistStatus === 'deleting';
-    const changingTodolistTitle = todolistStatus === 'updating';
+    const deletingTodolist = todolistStatus === TodolistStatus.DELETING;
+    const changingTodolistTitle = todolistStatus === TodolistStatus.UPDATING;
 
     return (
         <Paper sx={{ padding: 2, height: 'min-content' }} elevation={3}>

@@ -1,19 +1,13 @@
 import { RootState } from '@/app/store';
+import { TodolistsStatus } from '@/common/enums/enums';
 import { clientErrorHandler } from '@/common/utils/clientErrorHandler';
 import { createAppSlice } from '@/common/utils/createAppSlice';
 import { serverErrorHandler } from '@/common/utils/serverErrorHandler';
 import { createEntityAdapter } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { todolistsApi } from '../api/todolistsApi';
-import type { Todolist } from '../utils/types/todolist.types';
 import { INITIAL_PAGE } from '../utils/constants/constants';
-
-type TodolistsStatus =
-    | 'idle'
-    | 'initialLoading'
-    | 'loading'
-    | 'success'
-    | 'failure';
+import type { Todolist } from '../utils/types/todolist.types';
 
 // тудулистов максимум может быть 10 штук и они не так часто меняются,
 // поэтому можно оставить сортировку тут
@@ -24,7 +18,7 @@ const todolistsAdapter = createEntityAdapter<Todolist>({
 const todolistsSlice = createAppSlice({
     name: 'todolists',
     initialState: todolistsAdapter.getInitialState({
-        todolistsStatus: 'initialLoading' as TodolistsStatus,
+        todolistsStatus: TodolistsStatus.INITIAL_LOADING,
         tasksCountForTodolistOnServer: {} as { [key: string]: number },
         paginationPageForTodolist: {} as { [key: string]: number },
     }),
@@ -41,14 +35,14 @@ const todolistsSlice = createAppSlice({
             },
             {
                 fulfilled: (state, action) => {
-                    state.todolistsStatus = 'success';
+                    state.todolistsStatus = TodolistsStatus.SUCCESS;
                     action.payload.forEach(({ id }) => {
                         state.paginationPageForTodolist[id] = INITIAL_PAGE;
                     });
                     todolistsAdapter.setAll(state, action);
                 },
                 rejected: (state) => {
-                    state.todolistsStatus = 'failure';
+                    state.todolistsStatus = TodolistsStatus.FAILURE;
                 },
             },
         ),
@@ -65,17 +59,17 @@ const todolistsSlice = createAppSlice({
             },
             {
                 pending: (state) => {
-                    state.todolistsStatus = 'loading';
+                    state.todolistsStatus = TodolistsStatus.LOADING;
                 },
                 fulfilled: (state, action) => {
                     const { id } = action.payload;
-                    state.todolistsStatus = 'success';
+                    state.todolistsStatus = TodolistsStatus.SUCCESS;
                     state.paginationPageForTodolist[id] = INITIAL_PAGE;
                     state.tasksCountForTodolistOnServer[id] = 0;
                     todolistsAdapter.addOne(state, action);
                 },
                 rejected: (state) => {
-                    state.todolistsStatus = 'failure';
+                    state.todolistsStatus = TodolistsStatus.FAILURE;
                 },
             },
         ),

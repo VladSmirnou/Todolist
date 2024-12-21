@@ -18,3 +18,18 @@ export enum ResultCode {
     Error = 1,
     CaptchaError = 10,
 }
+
+export enum TodolistsStatus {
+    IDLE = 'idle',
+    INITIAL_LOADING = 'initialLoading',
+    LOADING = 'loading',
+    SUCCESS = 'success',
+    FAILURE = 'failure',
+}
+
+export enum AppStatus {
+    IDLE = 'idle',
+    FAILED = 'failed',
+    SUCCEEDED = 'succeeded',
+    PENDING = 'pending',
+}

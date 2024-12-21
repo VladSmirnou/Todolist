@@ -1,11 +1,8 @@
+import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { TaskIdParams } from '@/common/types/types';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
-import {
-    fetchTasks,
-    selectById,
-    selectTasksStatus,
-} from '@/features/todolists/model/tasksSlice';
+import { fetchTasks, selectById } from '@/features/todolists/model/tasksSlice';
 import {
     fetchTodolists,
     selectTodolistsStatus,
@@ -17,16 +14,16 @@ import {
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Typography from '@mui/material/Typography';
-import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { Container } from '../Container/Container';
 import { TaskDoesntExist } from '../TaskDoesntExist/TaskDoesntExist';
 import s from './SingleTaskPage.module.css';
-import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { SingleTaskPageSkeleton } from './Skeleton/Skeleton';
+import { AppStatus, TodolistsStatus } from '@/common/enums/enums';
+import { PATH } from '@/app/router/routerConfig';
 
 export const SingleTaskPage = () => {
-    const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const todolistsStatus = useAppSelector((state) =>
         selectTodolistsStatus(state.todolistEntities),
@@ -35,8 +32,9 @@ export const SingleTaskPage = () => {
     const { taskId } = useParams<TaskIdParams>();
     const task = useAppSelector((state) => selectById(state, taskId!));
 
-    const tasksStatus = useAppSelector((state) =>
-        selectTasksStatus(state.todolistEntities, task?.todoListId),
+    // if there is no task, then 'taskStatus' will never change
+    const [tasksLoaded, setTasksLoaded] = useState(
+        todolistsStatus !== TodolistsStatus.INITIAL_LOADING,
     );
 
     // Maybe a user saved a single task in the bookmarks,
@@ -45,12 +43,12 @@ export const SingleTaskPage = () => {
     // so I need to fetch them here as well if the user is logged
     // in but there are no todolists yet.
     useEffect(() => {
-        if (todolistsStatus === 'initialLoading') {
+        if (todolistsStatus === TodolistsStatus.INITIAL_LOADING) {
             dispatch(fetchTodolists())
                 .unwrap()
                 .then((todolists) => {
-                    todolists.forEach(({ id }) => {
-                        dispatch(
+                    const pr = todolists.map(({ id }) => {
+                        return dispatch(
                             fetchTasks({
                                 todolistId: id,
                                 count: TASKS_PER_PAGE,
@@ -58,24 +56,22 @@ export const SingleTaskPage = () => {
                             }),
                         );
                     });
+                    return Promise.all(pr);
                 })
                 .catch((err: string) => {
-                    dispatchAppStatusData(dispatch, 'failed', err);
-                });
+                    dispatchAppStatusData(dispatch, AppStatus.FAILED, err);
+                })
+                .finally(() => setTasksLoaded(true));
         }
     }, [dispatch, todolistsStatus]);
 
-    if (!tasksStatus) {
+    if (!tasksLoaded) {
         return <SingleTaskPageSkeleton />;
     }
 
     if (!task) {
         return <TaskDoesntExist />;
     }
-
-    const redirectToUpdateForm = () => {
-        navigate(`/update/${taskId}`, { replace: true });
-    };
 
     return (
         <Container className={s.container}>
@@ -84,8 +80,12 @@ export const SingleTaskPage = () => {
             </Typography>
             <Typography>{task.description}</Typography>
             <ButtonGroup variant="text">
-                <Button onClick={redirectToUpdateForm}>edit task</Button>
-                <Button onClick={() => navigate(-1)}>back</Button>
+                <Button component={Link} to={`/update/${taskId}`} replace>
+                    edit task
+                </Button>
+                <Button component={Link} to={PATH.root}>
+                    back to todolists
+                </Button>
             </ButtonGroup>
         </Container>
     );

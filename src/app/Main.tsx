@@ -6,6 +6,7 @@ import s from './Main.module.css';
 import { Container } from '@/common/components/Container/Container';
 import { MessagePopup } from '@/common/components/MessagePopup/MessagePopup';
 import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
+import { AppStatus } from '@/common/enums/enums';
 
 export const Main = () => {
     const dispatch = useAppDispatch();
@@ -16,7 +17,7 @@ export const Main = () => {
             .then(() => {
                 dispatchAppStatusData(
                     dispatch,
-                    'succeeded',
+                    AppStatus.SUCCEEDED,
                     'Todolist was successfully added',
                 );
             });

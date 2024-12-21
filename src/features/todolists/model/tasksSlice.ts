@@ -6,8 +6,9 @@ import { serverErrorHandler } from '@/common/utils/serverErrorHandler';
 import { createEntityAdapter } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { tasksApi } from '../api/tasksApi';
-import type { FilterValue, Task } from '../utils/types/todolist.types';
-import { setTasksCount } from './todolistSlice';
+import type { Task } from '../utils/types/todolist.types';
+import { removeTodolist, setTasksCount } from './todolistSlice';
+import { FilterValue, TasksStatus } from '../utils/enums/enums';
 
 const tasksAdapter = createEntityAdapter<Task>();
 
@@ -30,15 +31,6 @@ const tasksAdapter = createEntityAdapter<Task>();
 // page 1 becomes:
 // [1 2 4]
 
-type TasksStatus =
-    | 'idle'
-    | 'loading'
-    | 'success'
-    | 'failure'
-    | 'deleting'
-    | 'changingPage'
-    | 'initialLoading';
-
 const tasksSlise = createAppSlice({
     name: 'tasks',
     initialState: tasksAdapter.getInitialState({
@@ -49,18 +41,7 @@ const tasksSlise = createAppSlice({
             { todolistId: string; tasks: Array<Task> },
             { todolistId: string; count: number; page: number }
         >(
-            async (args, { rejectWithValue, dispatch, getState }) => {
-                const status = (getState() as RootState).todolistEntities.tasks
-                    .tasksStatus[args.todolistId];
-                if (status !== 'deleting' && status !== 'changingPage') {
-                    dispatch(
-                        tasksStatusChanged({
-                            todolistId: args.todolistId,
-                            nextTasksStatus:
-                                status ? 'loading' : 'initialLoading',
-                        }),
-                    );
-                }
+            async (args, { rejectWithValue, dispatch }) => {
                 try {
                     const res = await tasksApi.fetchTasks(args);
                     const { totalCount, items } = res.data;
@@ -82,7 +63,7 @@ const tasksSlise = createAppSlice({
             {
                 fulfilled: (state, action) => {
                     const { todolistId, tasks } = action.payload;
-                    state.tasksStatus[todolistId] = 'success';
+                    state.tasksStatus[todolistId] = TasksStatus.SUCCESS;
                     tasksAdapter.addMany(state, tasks);
                 },
             },
@@ -165,9 +146,20 @@ const tasksSlise = createAppSlice({
             state.tasksStatus[todolistId] = nextTasksStatus;
         }),
     }),
+    extraReducers: (builder) => {
+        builder.addCase(removeTodolist.fulfilled, (state, action) => {
+            const taskIdsToRemove = Object.values(state.entities)
+                .filter(({ todoListId }) => {
+                    return todoListId === action.payload;
+                })
+                .map(({ id }) => id);
+            tasksAdapter.removeMany(state, taskIdsToRemove);
+        });
+    },
     selectors: {
-        selectTasksStatus: (state, todolistId: string) =>
-            state.tasksStatus[todolistId],
+        selectTasksStatus: (state, todolistId: string) => {
+            return state.tasksStatus[todolistId];
+        },
     },
 });
 
@@ -206,12 +198,12 @@ export const selectFilteredTaskIds = (
 ) => {
     let tasks = taskIds.map((id) => selectById(state, id));
 
-    if (filterValue !== 'all') {
+    if (filterValue !== FilterValue.ALL) {
         tasks = tasks.filter(
             (task) =>
-                (filterValue === 'active' &&
+                (filterValue === FilterValue.ACTIVE &&
                     task.status === TaskStatusCodes.New) ||
-                (filterValue === 'completed' &&
+                (filterValue === FilterValue.COMPLETED &&
                     task.status === TaskStatusCodes.Completed),
         );
     }

@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import { LinearLoader } from '../LinearProgress/LinerProgress';
 import { selectAppStatus } from '@/app/appSlice';
+import { AppStatus } from '@/common/enums/enums';
 
 export const Header = () => {
     const dispatch = useAppDispatch();
@@ -40,23 +41,8 @@ export const Header = () => {
                         </Button>
                     )}
                 </Toolbar>
-                {appStatus === 'pending' && <LinearLoader />}
+                {appStatus === AppStatus.PENDING && <LinearLoader />}
             </AppBar>
         </Box>
     );
 };
-
-// export const Header = () => {
-//     const dispatch = useAppDispatch();
-//     const isLoggedIn = useAppSelector(selectIsLoggedIn);
-
-//     const handleLogout = () => {
-//         dispatch(logout());
-//     };
-
-//     return (
-//         <header style={{ backgroundColor: 'green' }}>
-//             {isLoggedIn && <button onClick={handleLogout}>logout</button>}
-//         </header>
-//     );
-// };

@@ -1,5 +1,7 @@
+import { ResultCode } from '../enums/enums';
+
 export type Response<T = {}> = {
-    resultCode: number;
+    resultCode: ResultCode;
     messages: Array<string>;
     fieldsErrors: Array<{ field: string; error: string }>;
     data: T;

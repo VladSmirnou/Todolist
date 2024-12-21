@@ -4,10 +4,10 @@ import {
     removeTodolist,
     updateTodolist,
 } from '@/features/todolists/model/todolistSlice';
-import type { TodolistStatus } from '../Todolist';
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 import s from './TodolistTitle.module.css';
+import { TodolistStatus } from '@/features/todolists/utils/enums/enums';
 
 type Props = {
     disabled: boolean;
@@ -22,16 +22,16 @@ export const TodolistTitle = (props: Props) => {
     const dispatch = useAppDispatch();
 
     const deleteTodo = () => {
-        onSetTodolistStatus('deleting');
+        onSetTodolistStatus(TodolistStatus.DELETING);
         dispatch(removeTodolist(todolistId)).finally(() =>
-            onSetTodolistStatus('idle'),
+            onSetTodolistStatus(TodolistStatus.IDLE),
         );
     };
 
     const updateTodo = (title: string) => {
-        onSetTodolistStatus('updating');
+        onSetTodolistStatus(TodolistStatus.UPDATING);
         dispatch(updateTodolist({ todolistId, title })).finally(() =>
-            onSetTodolistStatus('idle'),
+            onSetTodolistStatus(TodolistStatus.IDLE),
         );
     };
 

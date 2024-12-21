@@ -1,7 +1,8 @@
-import { ChangeEvent, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Typography, { TypographyProps } from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
+import Typography, { TypographyProps } from '@mui/material/Typography';
+import { ChangeEvent, MouseEvent, useRef, useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import s from './EditableSpan.module.css';
 
 type Props = {
     spanText: string;
@@ -21,7 +22,9 @@ export const EditableSpan = (props: Props) => {
 
     const clicksCount = useRef(0);
 
-    const handleClick = () => {
+    const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault();
+
         if (!disabled) {
             if (clicksCount.current === 0) {
                 setTimeout(() => {
@@ -68,7 +71,11 @@ export const EditableSpan = (props: Props) => {
                 error={!!error}
                 helperText={error}
             />
-        :   <Typography onClick={handleClick} {...rest}>
-                {spanText}
-            </Typography>;
+        :   <NavLink
+                className={s.contentLink}
+                to={navigateToLink ?? ''}
+                onClick={handleClick}
+            >
+                <Typography {...rest}>{spanText}</Typography>
+            </NavLink>;
 };

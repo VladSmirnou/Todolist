@@ -5,15 +5,16 @@ import { selectById, updateTask } from '@/features/todolists/model/tasksSlice';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import { ChangeEvent, FormEvent, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Container } from '../Container/Container';
 import s from './EditTaskForm.module.css';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import { TaskDoesntExist } from '../TaskDoesntExist/TaskDoesntExist';
 import { selectTodolistsStatus } from '@/features/todolists/model/todolistSlice';
-
-type FormStatus = 'idle' | 'updating';
+import { FormStatus } from './enum';
+import { TodolistsStatus } from '@/common/enums/enums';
+import { PATH } from '@/app/router/routerConfig';
 
 export const EditTaskForm = () => {
     const navigate = useNavigate();
@@ -29,28 +30,31 @@ export const EditTaskForm = () => {
 
     const [title, setTitle] = useState(task?.title ?? '');
     const [error, setError] = useState<string | null>(null);
-    const [status, setStatus] = useState<FormStatus>('idle');
+    const [status, setStatus] = useState<FormStatus>(FormStatus.IDLE);
 
-    if (todolistStatus === 'initialLoading') {
-        return <Navigate to={'/'} replace />;
+    if (todolistStatus === TodolistsStatus.INITIAL_LOADING) {
+        return <Navigate to={PATH.root} replace />;
     }
 
     if (!task) {
         return <TaskDoesntExist />;
     }
 
-    const disabled = status === 'updating';
+    const disabled = status === FormStatus.UPDATING;
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (title === task.title) {
+            return navigate(`/tasks/${taskId}`, { replace: true });
+        }
         if (!title.trim()) {
             setError('Title cannot be empty!');
         } else {
-            setStatus('updating');
+            setStatus(FormStatus.UPDATING);
             dispatch(updateTask({ task, newAttrValues: { title } }))
                 .unwrap()
                 .then(() => navigate(`/tasks/${taskId}`, { replace: true }))
-                .finally(() => setStatus('idle'));
+                .finally(() => setStatus(FormStatus.IDLE));
         }
     };
 
@@ -67,7 +71,7 @@ export const EditTaskForm = () => {
                 noValidate
                 autoComplete="off"
             >
-                <fieldset disabled={disabled} className={s.fieldset}>
+                <div className={s.updateFieldContainer}>
                     <TextField
                         autoFocus
                         size={'small'}
@@ -75,21 +79,20 @@ export const EditTaskForm = () => {
                         onChange={handleChange}
                         error={!!error}
                         helperText={error}
+                        disabled={disabled}
                     />
-                    <ButtonGroup variant="text">
+                    <ButtonGroup variant="text" disabled={disabled}>
                         <Button type="submit">update task</Button>
                         <Button
+                            component={Link}
                             type="button"
-                            onClick={() =>
-                                navigate(`/tasks/${taskId}`, {
-                                    replace: true,
-                                })
-                            }
+                            to={`/tasks/${taskId}`}
+                            replace
                         >
                             close
                         </Button>
                     </ButtonGroup>
-                </fieldset>
+                </div>
             </Box>
         </Container>
     );

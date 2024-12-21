@@ -17,8 +17,14 @@ import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import { ChangeEvent, useState } from 'react';
 import s from './Task.module.css';
+import { TasksStatus } from '@/features/todolists/utils/enums/enums';
 
-type TaskStatus = 'idle' | 'deleting' | 'changingStatus' | 'changingTitle';
+enum TaskStatus {
+    IDLE = 'idle',
+    DELETING = 'deleting',
+    CHANGING_STATUS = 'changingStatus',
+    CHANGING_TITLE = 'changingTitle',
+}
 
 type Props = {
     disabled: boolean;
@@ -30,46 +36,52 @@ export const Task = (props: Props) => {
     const { disabled: deletingTodolist, taskId, page } = props;
 
     const dispatch = useAppDispatch();
-    const [taskStatus, setTaskStatus] = useState<TaskStatus>('idle');
+    const [taskStatus, setTaskStatus] = useState<TaskStatus>(TaskStatus.IDLE);
 
     const task = useAppSelector((state) => selectById(state, taskId));
 
     const { title, status, todoListId, id } = task;
 
-    const deletingTask = taskStatus === 'deleting';
-    const changingTaskStatus = taskStatus === 'changingStatus';
-    const changingTaskTitle = taskStatus === 'changingTitle';
+    const deletingTask = taskStatus === TaskStatus.DELETING;
+    const changingTaskStatus = taskStatus === TaskStatus.CHANGING_STATUS;
+    const changingTaskTitle = taskStatus === TaskStatus.CHANGING_TITLE;
 
     const combinedCase = deletingTodolist || deletingTask;
 
     const handleStatusChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setTaskStatus('changingStatus');
+        setTaskStatus(TaskStatus.CHANGING_STATUS);
         const nextStatus =
             e.target.checked ? TaskStatusCodes.Completed : TaskStatusCodes.New;
         dispatch(
             updateTask({ task, newAttrValues: { status: nextStatus } }),
-        ).finally(() => setTaskStatus('idle'));
+        ).finally(() => setTaskStatus(TaskStatus.IDLE));
     };
 
     const handleTitleChange = (nextTitle: string) => {
-        setTaskStatus('changingTitle');
+        setTaskStatus(TaskStatus.CHANGING_TITLE);
         dispatch(
             updateTask({ task, newAttrValues: { title: nextTitle } }),
-        ).finally(() => setTaskStatus('idle'));
+        ).finally(() => setTaskStatus(TaskStatus.IDLE));
     };
 
     const handleDeleteTask = async () => {
-        setTaskStatus('deleting');
+        setTaskStatus(TaskStatus.DELETING);
+        dispatch(
+            tasksStatusChanged({
+                todolistId: todoListId,
+                nextTasksStatus: TasksStatus.DELETING_TASK,
+            }),
+        );
         try {
-            dispatch(
-                tasksStatusChanged({
-                    todolistId: task.todoListId,
-                    nextTasksStatus: 'deleting',
-                }),
-            );
             await dispatch(removeTask({ taskId, todoListId })).unwrap();
         } catch {
-            setTaskStatus('idle');
+            setTaskStatus(TaskStatus.IDLE);
+            dispatch(
+                tasksStatusChanged({
+                    todolistId: todoListId,
+                    nextTasksStatus: TasksStatus.IDLE,
+                }),
+            );
             return;
         }
         try {
@@ -79,14 +91,20 @@ export const Task = (props: Props) => {
                     count: TASKS_PER_PAGE,
                     page,
                 }),
-            ).unwrap();
+            );
         } finally {
             // Если таск был удален с сервера успешно, мне не важно как завершиться
             // fetch запрос, мне надо удалить таск локально, но только после того,
             // как завершится запрос, чтобы ui не дергался
             dispatch(removeLocalTask(taskId));
         }
-        setTaskStatus('idle');
+        setTaskStatus(TaskStatus.IDLE);
+        dispatch(
+            tasksStatusChanged({
+                todolistId: todoListId,
+                nextTasksStatus: TasksStatus.IDLE,
+            }),
+        );
     };
 
     const cx = bindClasses({ taskTitleDisabled: s.taskTitleDisabled });
