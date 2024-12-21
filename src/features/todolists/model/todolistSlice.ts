@@ -1,13 +1,13 @@
 import { RootState } from '@/app/store';
+import { TodolistsStatus } from '@/common/enums/enums';
 import { clientErrorHandler } from '@/common/utils/clientErrorHandler';
 import { createAppSlice } from '@/common/utils/createAppSlice';
 import { serverErrorHandler } from '@/common/utils/serverErrorHandler';
 import { createEntityAdapter } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { todolistsApi } from '../api/todolistsApi';
-import type { Todolist } from '../utils/types/todolist.types';
 import { INITIAL_PAGE } from '../utils/constants/constants';
-import { TodolistsStatus } from '@/common/enums/enums';
+import type { Todolist } from '../utils/types/todolist.types';
 
 // тудулистов максимум может быть 10 штук и они не так часто меняются,
 // поэтому можно оставить сортировку тут
