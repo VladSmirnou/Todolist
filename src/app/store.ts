@@ -25,6 +25,7 @@ import {
     appStatusChanged,
     appStatusTextSet,
 } from './appSlice';
+import { listenerMiddleware } from './listenerMiddleware';
 
 const todolistEntitiesReducer = combineReducers({
     todolists: todolistsReducer,
@@ -37,6 +38,8 @@ export const store = configureStore({
         [app]: appSliceReducer,
         todolistEntities: todolistEntitiesReducer,
     },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware().prepend(listenerMiddleware.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
