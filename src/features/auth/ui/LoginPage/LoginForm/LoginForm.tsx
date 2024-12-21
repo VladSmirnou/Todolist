@@ -11,6 +11,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import TextField from '@mui/material/TextField';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import s from './LoginForm.module.css';
+import { AppStatus } from '@/common/enums/enums';
 
 const defaultValues = {
     email: '',
@@ -61,7 +62,7 @@ export const LoginForm = () => {
                 autoComplete="off"
             >
                 <TextField
-                    disabled={appStatus === 'pending'}
+                    disabled={appStatus === AppStatus.PENDING}
                     error={!!errors.email}
                     id="email"
                     label="Email"
@@ -69,7 +70,7 @@ export const LoginForm = () => {
                     {...register('email', { required })}
                 />
                 <TextField
-                    disabled={appStatus === 'pending'}
+                    disabled={appStatus === AppStatus.PENDING}
                     error={!!errors.password}
                     type="password"
                     id="password"
@@ -87,7 +88,7 @@ export const LoginForm = () => {
                 <FormControlLabel
                     control={
                         <Checkbox
-                            disabled={appStatus === 'pending'}
+                            disabled={appStatus === AppStatus.PENDING}
                             {...register('rememberMe')}
                         />
                     }
@@ -96,7 +97,9 @@ export const LoginForm = () => {
                 <Button
                     variant="contained"
                     type="submit"
-                    disabled={!isDirty || !isValid || appStatus === 'pending'}
+                    disabled={
+                        !isDirty || !isValid || appStatus === AppStatus.PENDING
+                    }
                 >
                     Login
                 </Button>
