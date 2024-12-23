@@ -26,6 +26,7 @@ import {
     appStatusTextSet,
 } from './appSlice';
 import { listenerMiddleware } from './listenerMiddleware';
+import { logoutCleanup } from '@/common/utils/commonActions';
 
 const todolistEntitiesReducer = combineReducers({
     todolists: todolistsReducer,
@@ -52,7 +53,8 @@ export type AppActionType =
     | ReturnType<typeof removeLocalOldestTaskForTodolist>
     | ReturnType<typeof setTasksCount>
     | ReturnType<typeof paginationPageChanged>
-    | ReturnType<typeof tasksStatusChanged>;
+    | ReturnType<typeof tasksStatusChanged>
+    | ReturnType<typeof logoutCleanup>;
 
 // typeof store.dispatch returns ThunkDispatch<RootState, undefined, UnknownAction>
 // so I will be able to dispatch everything without any type checking

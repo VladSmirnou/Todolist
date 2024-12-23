@@ -9,27 +9,9 @@ import { tasksApi } from '../api/tasksApi';
 import type { Task } from '../utils/types/todolist.types';
 import { removeTodolist, setTasksCount } from './todolistSlice';
 import { FilterValue, TasksStatus } from '../utils/enums/enums';
+import { logoutCleanup } from '@/common/utils/commonActions';
 
 const tasksAdapter = createEntityAdapter<Task>();
-
-// tasks from the server (order) [-4, -3, -2, -1, 0]
-// чем меньше цифра, тем раньше был добавлен таск
-// поэтому, т.к. addOne добавляет в конец, надо чтобы
-// массив сортировался по возрастанию, чтобы при добавлении
-// новой таски убирать .at(-1) (т.е. самый старый элемент) на другую
-// страницу.
-
-// tasks per page = 3
-// [1 2 3 4 (+ 11, 52, 63 for another todolist)] (on the server, doesn't exist locally)
-// remove task 3 on the server
-// [1 2 4 (+ 11, 52, 63 for another todolist)]
-// server request for todolist1 page 1 \ tasks per page 3 -> [1 2 4]
-// tasks locally -> [1 2 3 (+ 11, 52, 63 for another todolist)]
-// addMany
-// [1 2 [3 needs to be removed] [4 added] (+ 11, 52, 63 for another todolist)]
-// removing task 3 locally
-// page 1 becomes:
-// [1 2 4]
 
 const tasksSlise = createAppSlice({
     name: 'tasks',
@@ -147,14 +129,19 @@ const tasksSlise = createAppSlice({
         }),
     }),
     extraReducers: (builder) => {
-        builder.addCase(removeTodolist.fulfilled, (state, action) => {
-            const taskIdsToRemove = Object.values(state.entities)
-                .filter(({ todoListId }) => {
-                    return todoListId === action.payload;
-                })
-                .map(({ id }) => id);
-            tasksAdapter.removeMany(state, taskIdsToRemove);
-        });
+        builder
+            .addCase(removeTodolist.fulfilled, (state, action) => {
+                const taskIdsToRemove = Object.values(state.entities)
+                    .filter(({ todoListId }) => {
+                        return todoListId === action.payload;
+                    })
+                    .map(({ id }) => id);
+                tasksAdapter.removeMany(state, taskIdsToRemove);
+            })
+            .addCase(logoutCleanup.type, (state) => {
+                state.tasksStatus = {};
+                tasksAdapter.removeAll(state);
+            });
     },
     selectors: {
         selectTasksStatus: (state, todolistId: string) => {
