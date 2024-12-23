@@ -8,6 +8,7 @@ import { AppStatus, ResultCode } from '@/common/enums/enums';
 import { AUTH_TOKEN_KEY } from '@/common/constants/constants';
 import { AppStartListening } from '@/app/listenerMiddleware';
 import { isAnyOf } from '@reduxjs/toolkit';
+import { logoutCleanup } from '@/common/utils/commonActions';
 
 const initialState = {
     isLoggedIn: false,
@@ -97,6 +98,12 @@ export const addAuthListeners = (startAppListening: AppStartListening) => {
         matcher: isAnyOf(login.pending, logout.pending),
         effect: (_, { dispatch }) => {
             dispatch(appStatusChanged(AppStatus.PENDING));
+        },
+    });
+    startAppListening({
+        actionCreator: logout.fulfilled,
+        effect: (_, { dispatch }) => {
+            dispatch(logoutCleanup());
         },
     });
 };
