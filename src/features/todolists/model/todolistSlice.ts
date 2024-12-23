@@ -8,9 +8,8 @@ import { AxiosError } from 'axios';
 import { todolistsApi } from '../api/todolistsApi';
 import { INITIAL_PAGE } from '../utils/constants/constants';
 import type { Todolist } from '../utils/types/todolist.types';
+import { logoutCleanup } from '@/common/utils/commonActions';
 
-// тудулистов максимум может быть 10 штук и они не так часто меняются,
-// поэтому можно оставить сортировку тут
 const todolistsAdapter = createEntityAdapter<Todolist>({
     sortComparer: (a, b) => b.addedDate.localeCompare(a.addedDate),
 });
@@ -127,6 +126,14 @@ const todolistsSlice = createAppSlice({
             state.paginationPageForTodolist[todolistId] = nextPage;
         }),
     }),
+    extraReducers: (builder) => {
+        builder.addCase(logoutCleanup.type, (state) => {
+            state.todolistsStatus = TodolistsStatus.INITIAL_LOADING;
+            state.tasksCountForTodolistOnServer = {};
+            state.paginationPageForTodolist = {};
+            todolistsAdapter.removeAll(state);
+        });
+    },
     selectors: {
         selectTodolistsStatus: (state) => state.todolistsStatus,
         selectTasksCountForTodolistOnServer: (state, todolistId: string) =>
