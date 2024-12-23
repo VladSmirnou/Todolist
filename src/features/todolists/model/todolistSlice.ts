@@ -127,7 +127,7 @@ const todolistsSlice = createAppSlice({
         }),
     }),
     extraReducers: (builder) => {
-        builder.addCase(logoutCleanup.type, (state) => {
+        builder.addCase(logoutCleanup, (state) => {
             state.todolistsStatus = TodolistsStatus.INITIAL_LOADING;
             state.tasksCountForTodolistOnServer = {};
             state.paginationPageForTodolist = {};

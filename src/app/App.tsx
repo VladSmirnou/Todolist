@@ -2,22 +2,23 @@ import { CicrularLoader } from '@/common/components/CircularProgress/CircularPro
 import { Header } from '@/common/components/Header/Header';
 import { MessagePopup } from '@/common/components/MessagePopup/MessagePopup';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
-import { me } from '@/features/auth/model/authSlice';
+import { useMeQuery } from '@/features/api/authApi';
+import { setIsLoggedIn } from '@/features/auth/model/authSlice';
 import CssBaseline from '@mui/material/CssBaseline';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 
 export const App = () => {
+    const { data, isLoading } = useMeQuery();
     const dispatch = useAppDispatch();
 
-    const [meRequestIsFinished, setMeRequestIsFinished] =
-        useState<boolean>(false);
-
     useEffect(() => {
-        dispatch(me()).finally(() => setMeRequestIsFinished(true));
-    }, [dispatch]);
+        if (data !== undefined) {
+            dispatch(setIsLoggedIn(data));
+        }
+    }, [dispatch, data]);
 
-    return meRequestIsFinished ?
+    return !isLoading ?
             <>
                 <CssBaseline />
                 <Header />

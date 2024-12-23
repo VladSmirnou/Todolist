@@ -1,6 +1,12 @@
+import { appStatusChanged, selectAppStatus } from '@/app/appSlice';
+import { AUTH_TOKEN_KEY } from '@/common/constants/constants';
+import { AppStatus } from '@/common/enums/enums';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
-import { logout, selectIsLoggedIn } from '@/features/auth/model/authSlice';
+import {
+    selectIsLoggedIn,
+    setIsLoggedIn,
+} from '@/features/auth/model/authSlice';
 import MenuIcon from '@mui/icons-material/Menu';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -8,16 +14,21 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import { LinearLoader } from '../LinearProgress/LinerProgress';
-import { selectAppStatus } from '@/app/appSlice';
-import { AppStatus } from '@/common/enums/enums';
+import { useLogoutMutation } from '@/features/api/authApi';
 
 export const Header = () => {
     const dispatch = useAppDispatch();
     const isLoggedIn = useAppSelector(selectIsLoggedIn);
     const appStatus = useAppSelector(selectAppStatus);
 
-    const handleLogout = () => {
-        dispatch(logout());
+    const [logout] = useLogoutMutation();
+
+    const handleLogout = async () => {
+        dispatch(appStatusChanged(AppStatus.PENDING));
+        await logout().unwrap();
+        dispatch(appStatusChanged(AppStatus.IDLE));
+        dispatch(setIsLoggedIn(false));
+        localStorage.removeItem(AUTH_TOKEN_KEY);
     };
 
     return (

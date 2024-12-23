@@ -1,23 +1,22 @@
 import { EditableSpan } from '@/common/components/EditableSpan/EditableSpan';
 import { TaskStatusCodes } from '@/common/enums/enums';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
-import { useAppSelector } from '@/common/hooks/useAppSelector';
 import {
     fetchTasks,
     removeLocalTask,
     removeTask,
-    selectById,
     tasksStatusChanged,
     updateTask,
 } from '@/features/todolists/model/tasksSlice';
 import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
+import { TasksStatus } from '@/features/todolists/utils/enums/enums';
 import { bindClasses } from '@/features/todolists/utils/moduleStyleBinder/moduleStyleBinder';
+import type { Task as TaskType } from '@/features/todolists/utils/types/todolist.types';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import { ChangeEvent, useState } from 'react';
 import s from './Task.module.css';
-import { TasksStatus } from '@/features/todolists/utils/enums/enums';
 
 enum TaskStatus {
     IDLE = 'idle',
@@ -28,19 +27,17 @@ enum TaskStatus {
 
 type Props = {
     disabled: boolean;
-    taskId: string;
+    task: TaskType;
     page: number;
 };
 
 export const Task = (props: Props) => {
-    const { disabled: deletingTodolist, taskId, page } = props;
+    const { disabled: deletingTodolist, task, page } = props;
 
     const dispatch = useAppDispatch();
     const [taskStatus, setTaskStatus] = useState<TaskStatus>(TaskStatus.IDLE);
 
-    const task = useAppSelector((state) => selectById(state, taskId));
-
-    const { title, status, todoListId, id } = task;
+    const { title, status, todoListId, id: taskId } = task;
 
     const deletingTask = taskStatus === TaskStatus.DELETING;
     const changingTaskStatus = taskStatus === TaskStatus.CHANGING_STATUS;
@@ -129,7 +126,7 @@ export const Task = (props: Props) => {
                 spanText={title}
                 onEdit={handleTitleChange}
                 disabled={combinedCase || changingTaskTitle}
-                navigateToLink={`/tasks/${id}`}
+                navigateToLink={`/tasks/${taskId}`}
                 className={className}
             />
             <IconButton

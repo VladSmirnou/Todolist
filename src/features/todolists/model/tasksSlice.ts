@@ -138,7 +138,7 @@ const tasksSlise = createAppSlice({
                     .map(({ id }) => id);
                 tasksAdapter.removeMany(state, taskIdsToRemove);
             })
-            .addCase(logoutCleanup.type, (state) => {
+            .addCase(logoutCleanup, (state) => {
                 state.tasksStatus = {};
                 tasksAdapter.removeAll(state);
             });

@@ -64,6 +64,7 @@ export default tseslint.config(
             '@typescript-eslint/no-misused-promises': 'off',
             '@typescript-eslint/no-empty-object-type': 'off',
             '@typescript-eslint/unbound-method': 'off',
+            '@typescript-eslint/prefer-promise-reject-errors': 'off',
         },
     },
 );

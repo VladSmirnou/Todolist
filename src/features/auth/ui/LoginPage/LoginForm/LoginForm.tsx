@@ -1,8 +1,10 @@
-import { selectAppStatus } from '@/app/appSlice';
+import { appStatusChanged, selectAppStatus } from '@/app/appSlice';
+import { AUTH_TOKEN_KEY } from '@/common/constants/constants';
+import { AppStatus } from '@/common/enums/enums';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { LoginFormData } from '@/common/types/types';
-import { login } from '@/features/auth/model/authSlice';
+import { setIsLoggedIn } from '@/features/auth/model/authSlice';
 import { FormControl } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -11,7 +13,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import TextField from '@mui/material/TextField';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import s from './LoginForm.module.css';
-import { AppStatus } from '@/common/enums/enums';
+import { useLoginMutation } from '@/features/api/authApi';
 
 const defaultValues = {
     email: '',
@@ -27,6 +29,7 @@ const required = {
 export const LoginForm = () => {
     const dispatch = useAppDispatch();
     const appStatus = useAppSelector(selectAppStatus);
+    const [login] = useLoginMutation();
 
     const {
         register,
@@ -35,21 +38,25 @@ export const LoginForm = () => {
         setError,
     } = useForm<LoginFormData>({ defaultValues });
 
-    const onSubmit: SubmitHandler<LoginFormData> = (data) => {
-        dispatch(login(data))
-            .unwrap()
-            .catch(
-                (
-                    err: Array<{
-                        field: keyof LoginFormData;
-                        error: string;
-                    }>,
-                ) => {
-                    err.forEach(({ field, error }) => {
-                        setError(field, { type: 'custom', message: error });
-                    });
-                },
-            );
+    const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
+        dispatch(appStatusChanged(AppStatus.PENDING));
+        const result = await login(data).unwrap();
+        localStorage.setItem(AUTH_TOKEN_KEY, result.data.token);
+        dispatch(setIsLoggedIn(true));
+        dispatch(appStatusChanged(AppStatus.IDLE));
+        //     .unwrap()
+        //     .catch(
+        //         (
+        //             err: Array<{
+        //                 field: keyof LoginFormData;
+        //                 error: string;
+        //             }>,
+        //         ) => {
+        //             err.forEach(({ field, error }) => {
+        //                 setError(field, { type: 'custom', message: error });
+        //             });
+        //         },
+        //     );
     };
 
     return (

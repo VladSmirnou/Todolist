@@ -1,26 +1,23 @@
 import { AddItemForm } from '@/common/components/AddItemForm/AddItemForm';
-import { useAppDispatch } from '@/common/hooks/useAppDispatch';
-import { addTodolist } from '@/features/todolists/model/todolistSlice';
-import { Todolists } from '@/features/todolists/ui/Todolists/Todolists';
-import s from './Main.module.css';
 import { Container } from '@/common/components/Container/Container';
 import { MessagePopup } from '@/common/components/MessagePopup/MessagePopup';
-import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
-import { AppStatus } from '@/common/enums/enums';
+import { useAddTodolistMutation } from '@/features/api/todolistsApi';
+import { Todolists } from '@/features/todolists/ui/Todolists/Todolists';
+import s from './Main.module.css';
 
 export const Main = () => {
-    const dispatch = useAppDispatch();
+    const [addTodolist] = useAddTodolistMutation();
 
     const addTodo = (todolistTitle: string) => {
-        dispatch(addTodolist(todolistTitle))
-            .unwrap()
-            .then(() => {
-                dispatchAppStatusData(
-                    dispatch,
-                    AppStatus.SUCCEEDED,
-                    'Todolist was successfully added',
-                );
-            });
+        addTodolist(todolistTitle);
+        // .unwrap()
+        // .then(() => {
+        //     dispatchAppStatusData(
+        //         dispatch,
+        //         AppStatus.SUCCEEDED,
+        //         'Todolist was successfully added',
+        //     );
+        // });
     };
 
     return (
