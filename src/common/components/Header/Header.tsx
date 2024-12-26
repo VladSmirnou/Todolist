@@ -1,8 +1,10 @@
-import { appStatusChanged, selectAppStatus } from '@/app/appSlice';
+import { selectAppStatus } from '@/app/appSlice';
 import { AUTH_TOKEN_KEY } from '@/common/constants/constants';
 import { AppStatus } from '@/common/enums/enums';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useAppSelector } from '@/common/hooks/useAppSelector';
+import { useLogoutMutation } from '@/features/api/authApi';
+import { baseApi } from '@/features/api/baseApi';
 import {
     selectIsLoggedIn,
     setIsLoggedIn,
@@ -14,21 +16,27 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import { LinearLoader } from '../LinearProgress/LinerProgress';
-import { useLogoutMutation } from '@/features/api/authApi';
 
 export const Header = () => {
     const dispatch = useAppDispatch();
     const isLoggedIn = useAppSelector(selectIsLoggedIn);
     const appStatus = useAppSelector(selectAppStatus);
-
     const [logout] = useLogoutMutation();
 
-    const handleLogout = async () => {
-        dispatch(appStatusChanged(AppStatus.PENDING));
-        await logout().unwrap();
-        dispatch(appStatusChanged(AppStatus.IDLE));
-        dispatch(setIsLoggedIn(false));
-        localStorage.removeItem(AUTH_TOKEN_KEY);
+    const handleLogout = () => {
+        logout()
+            .unwrap()
+            .then(() => {
+                dispatch(setIsLoggedIn(false));
+                localStorage.removeItem(AUTH_TOKEN_KEY);
+                // Лишняя микротаска позволит компонентам перерисоваться
+                // и после инвалидации тэгов у кэша не будет подписчиков,
+                // поэтому повторные запросы не отправятся, а кэш тасок и тудулистов
+                // просто удалится.
+            })
+            .then(() => {
+                dispatch(baseApi.util.invalidateTags(['Todolists', 'Tasks']));
+            });
     };
 
     return (

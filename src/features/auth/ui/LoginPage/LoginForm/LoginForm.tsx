@@ -28,8 +28,7 @@ const required = {
 
 export const LoginForm = () => {
     const dispatch = useAppDispatch();
-    const appStatus = useAppSelector(selectAppStatus);
-    const [login] = useLoginMutation();
+    const [login, { isLoading }] = useLoginMutation();
 
     const {
         register,
@@ -39,11 +38,9 @@ export const LoginForm = () => {
     } = useForm<LoginFormData>({ defaultValues });
 
     const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
-        dispatch(appStatusChanged(AppStatus.PENDING));
         const result = await login(data).unwrap();
         localStorage.setItem(AUTH_TOKEN_KEY, result.data.token);
         dispatch(setIsLoggedIn(true));
-        dispatch(appStatusChanged(AppStatus.IDLE));
         //     .unwrap()
         //     .catch(
         //         (
@@ -69,7 +66,7 @@ export const LoginForm = () => {
                 autoComplete="off"
             >
                 <TextField
-                    disabled={appStatus === AppStatus.PENDING}
+                    disabled={isLoading}
                     error={!!errors.email}
                     id="email"
                     label="Email"
@@ -77,7 +74,7 @@ export const LoginForm = () => {
                     {...register('email', { required })}
                 />
                 <TextField
-                    disabled={appStatus === AppStatus.PENDING}
+                    disabled={isLoading}
                     error={!!errors.password}
                     type="password"
                     id="password"
@@ -95,7 +92,7 @@ export const LoginForm = () => {
                 <FormControlLabel
                     control={
                         <Checkbox
-                            disabled={appStatus === AppStatus.PENDING}
+                            disabled={isLoading}
                             {...register('rememberMe')}
                         />
                     }
@@ -104,9 +101,7 @@ export const LoginForm = () => {
                 <Button
                     variant="contained"
                     type="submit"
-                    disabled={
-                        !isDirty || !isValid || appStatus === AppStatus.PENDING
-                    }
+                    disabled={!isDirty || !isValid || isLoading}
                 >
                     Login
                 </Button>

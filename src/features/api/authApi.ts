@@ -8,7 +8,7 @@ type MeResponseData = {
     login: string;
 };
 
-const authApi = baseApi.injectEndpoints({
+export const authApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         me: builder.query<boolean, void>({
             query: () => '/auth/me',

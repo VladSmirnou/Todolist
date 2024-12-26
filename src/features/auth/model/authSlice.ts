@@ -1,14 +1,5 @@
-// import type { LoginFormData } from '@/common/types/types';
-// import { AxiosError } from 'axios';
-// import { authApi } from '../api/auth-api';
-// import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
-// import { appStatusChanged } from '@/app/appSlice';
-// import { AppStatus, ResultCode } from '@/common/enums/enums';
-// import { AUTH_TOKEN_KEY } from '@/common/constants/constants';
-// import { logoutCleanup } from '@/common/utils/commonActions';
 import { createAppSlice } from '@/common/utils/createAppSlice';
-import { AppStartListening } from '@/app/listenerMiddleware';
-import { isAnyOf, PayloadAction } from '@reduxjs/toolkit';
+import { PayloadAction } from '@reduxjs/toolkit';
 
 const initialState = {
     isLoggedIn: false,
@@ -99,20 +90,21 @@ const authSlice = createAppSlice({
 
 export const { name, reducer: authSliceReducer } = authSlice;
 export const { selectIsLoggedIn } = authSlice.selectors;
-// export const { me, login, logout, setIsLoggedIn } = authSlice.actions;
 export const { setIsLoggedIn } = authSlice.actions;
 
-export const addAuthListeners = (startAppListening: AppStartListening) => {
-    // startAppListening({
-    //     matcher: isAnyOf(login.pending, logout.pending),
-    //     effect: (_, { dispatch }) => {
-    //         dispatch(appStatusChanged(AppStatus.PENDING));
-    //     },
-    // });
-    // startAppListening({
-    //     actionCreator: logout.fulfilled,
-    //     effect: (_, { dispatch }) => {
-    //         dispatch(logoutCleanup());
-    //     },
-    // });
-};
+// export const addAuthListeners = (startAppListening: AppStartListening) => {
+//     startAppListening({
+//         matcher: todolistsApi.endpoints.addTodolist.matchFulfilled,
+//         effect: (_, { dispatch }) => {
+//             dispatch(appStatusChanged(AppStatus.SUCCEEDED));
+//             dispatch(appStatusTextSet('Todolist was successfully added'));
+//         },
+//     });
+//     startAppListening({
+//         matcher: tasksApi.endpoints.addTask.matchFulfilled,
+//         effect: (_, { dispatch }) => {
+//             dispatch(appStatusChanged(AppStatus.SUCCEEDED));
+//             dispatch(appStatusTextSet('Task was successfully added'));
+//         },
+//     });
+// };

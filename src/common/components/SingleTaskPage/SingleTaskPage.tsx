@@ -1,69 +1,73 @@
+import { PATH } from '@/app/router/routerConfig';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
-import { useAppSelector } from '@/common/hooks/useAppSelector';
 import { TaskIdParams } from '@/common/types/types';
-import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
-import { fetchTasks, selectById } from '@/features/todolists/model/tasksSlice';
-import {
-    fetchTodolists,
-    selectTodolistsStatus,
-} from '@/features/todolists/model/todolistSlice';
-import {
-    INITIAL_PAGE,
-    TASKS_PER_PAGE,
-} from '@/features/todolists/utils/constants/constants';
+import { tasksApi, useFetchTasksQuery } from '@/features/api/tasksApi';
+import { todolistsApi } from '@/features/api/todolistsApi';
+import { Task } from '@/features/todolists/utils/types/todolist.types';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { Container } from '../Container/Container';
 import { TaskDoesntExist } from '../TaskDoesntExist/TaskDoesntExist';
 import s from './SingleTaskPage.module.css';
 import { SingleTaskPageSkeleton } from './Skeleton/Skeleton';
-import { AppStatus, TodolistsStatus } from '@/common/enums/enums';
-import { PATH } from '@/app/router/routerConfig';
 
-export const SingleTaskPage = () => {
+type Props = {
+    todolistId: string;
+    taskId: string;
+};
+
+const NavigatedFromTask = (props: Props) => {
+    const { todolistId, taskId } = props;
+
+    const { data: tasks, isFetching } = useFetchTasksQuery({ todolistId });
+
+    if (isFetching) {
+        return <SingleTaskPageSkeleton />;
+    }
+
+    const task = tasks?.items.find((task) => task.id === taskId);
+
+    if (!task) {
+        return <TaskDoesntExist />;
+    } else {
+        return <UI task={task} />;
+    }
+};
+
+const NavigatedFromOutside = ({ taskId }: { taskId: string }) => {
     const dispatch = useAppDispatch();
-    const todolistsStatus = useAppSelector((state) =>
-        selectTodolistsStatus(state.todolistEntities),
-    );
 
-    const { taskId } = useParams<TaskIdParams>();
-    const task = useAppSelector((state) => selectById(state, taskId!));
+    const [tasksLoaded, setTasksLoaded] = useState(false);
+    const [task, setTask] = useState<Task | null>(null);
 
-    // if there is no task, then 'taskStatus' will never change
-    const [tasksLoaded, setTasksLoaded] = useState(
-        todolistsStatus !== TodolistsStatus.INITIAL_LOADING,
-    );
-
-    // Maybe a user saved a single task in the bookmarks,
-    // so entering this page directly will show him that this
-    // task no longer exists because todolists are not loaded yet,
-    // so I need to fetch them here as well if the user is logged
-    // in but there are no todolists yet.
     useEffect(() => {
-        if (todolistsStatus === TodolistsStatus.INITIAL_LOADING) {
-            dispatch(fetchTodolists())
-                .unwrap()
-                .then((todolists) => {
-                    const pr = todolists.map(({ id }) => {
+        dispatch(todolistsApi.endpoints.fetchTodolists.initiate())
+            .unwrap()
+            .then((todolists) => {
+                return Promise.all(
+                    todolists.map((tl) => {
                         return dispatch(
-                            fetchTasks({
-                                todolistId: id,
-                                count: TASKS_PER_PAGE,
-                                page: INITIAL_PAGE,
+                            tasksApi.endpoints.fetchTasks.initiate({
+                                todolistId: tl.id,
                             }),
-                        );
-                    });
-                    return Promise.all(pr);
-                })
-                .catch((err: string) => {
-                    dispatchAppStatusData(dispatch, AppStatus.FAILED, err);
-                })
-                .finally(() => setTasksLoaded(true));
-        }
-    }, [dispatch, todolistsStatus]);
+                        ).unwrap();
+                    }),
+                );
+            })
+            .then((tasksData) => {
+                for (const { items: tasks } of tasksData) {
+                    const task = tasks.find((task) => task.id === taskId);
+                    if (task) {
+                        setTask(task);
+                        break;
+                    }
+                }
+            })
+            .finally(() => setTasksLoaded(true));
+    }, [dispatch, taskId]);
 
     if (!tasksLoaded) {
         return <SingleTaskPageSkeleton />;
@@ -73,6 +77,10 @@ export const SingleTaskPage = () => {
         return <TaskDoesntExist />;
     }
 
+    return <UI task={task} />;
+};
+
+const UI = ({ task }: { task: Task }) => {
     return (
         <Container className={s.container}>
             <Typography component={'h2'} variant={'h2'}>
@@ -80,7 +88,12 @@ export const SingleTaskPage = () => {
             </Typography>
             <Typography>{task.description}</Typography>
             <ButtonGroup variant="text">
-                <Button component={Link} to={`/update/${taskId}`} replace>
+                <Button
+                    component={Link}
+                    to={`/update/${task.id}`}
+                    state={task.todoListId}
+                    replace
+                >
                     edit task
                 </Button>
                 <Button component={Link} to={PATH.root}>
@@ -89,4 +102,26 @@ export const SingleTaskPage = () => {
             </ButtonGroup>
         </Container>
     );
+};
+
+export const SingleTaskPage = () => {
+    const location = useLocation();
+    const { taskId } = useParams<TaskIdParams>();
+
+    const locationState = location.state as string | null;
+
+    window.history.replaceState(null, '');
+
+    let content;
+    if (!locationState) {
+        content = <NavigatedFromOutside taskId={taskId as string} />;
+    } else {
+        content = (
+            <NavigatedFromTask
+                todolistId={locationState}
+                taskId={taskId as string}
+            />
+        );
+    }
+    return content;
 };

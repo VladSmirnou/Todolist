@@ -1,17 +1,14 @@
 import { EditableSpan } from '@/common/components/EditableSpan/EditableSpan';
 import { TaskStatusCodes } from '@/common/enums/enums';
-import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import {
-    fetchTasks,
-    removeLocalTask,
-    removeTask,
-    tasksStatusChanged,
-    updateTask,
-} from '@/features/todolists/model/tasksSlice';
-import { TASKS_PER_PAGE } from '@/features/todolists/utils/constants/constants';
-import { TasksStatus } from '@/features/todolists/utils/enums/enums';
+    useRemoveTaskMutation,
+    useUpdateTaskMutation,
+} from '@/features/api/tasksApi';
 import { bindClasses } from '@/features/todolists/utils/moduleStyleBinder/moduleStyleBinder';
-import type { Task as TaskType } from '@/features/todolists/utils/types/todolist.types';
+import type {
+    Task as TaskType,
+    UpdateModel,
+} from '@/features/todolists/utils/types/todolist.types';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
@@ -20,93 +17,69 @@ import s from './Task.module.css';
 
 enum TaskStatus {
     IDLE = 'idle',
-    DELETING = 'deleting',
-    CHANGING_STATUS = 'changingStatus',
-    CHANGING_TITLE = 'changingTitle',
+    MODIFYING = 'modifying',
 }
 
 type Props = {
     disabled: boolean;
     task: TaskType;
-    page: number;
+    paginationPage: number;
 };
 
 export const Task = (props: Props) => {
-    const { disabled: deletingTodolist, task, page } = props;
+    const { disabled: deletingTodolist, task } = props;
 
-    const dispatch = useAppDispatch();
     const [taskStatus, setTaskStatus] = useState<TaskStatus>(TaskStatus.IDLE);
 
-    const { title, status, todoListId, id: taskId } = task;
+    const [updateTask] = useUpdateTaskMutation();
+    const [removeTask] = useRemoveTaskMutation();
 
-    const deletingTask = taskStatus === TaskStatus.DELETING;
-    const changingTaskStatus = taskStatus === TaskStatus.CHANGING_STATUS;
-    const changingTaskTitle = taskStatus === TaskStatus.CHANGING_TITLE;
+    const { title, status, id: taskId, todoListId } = task;
 
-    const combinedCase = deletingTodolist || deletingTask;
+    const modifying = taskStatus === TaskStatus.MODIFYING;
 
-    const handleStatusChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setTaskStatus(TaskStatus.CHANGING_STATUS);
+    const combinedCase = deletingTodolist || modifying;
+
+    const handleStatusChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const nextStatus =
             e.target.checked ? TaskStatusCodes.Completed : TaskStatusCodes.New;
-        dispatch(
-            updateTask({ task, newAttrValues: { status: nextStatus } }),
-        ).finally(() => setTaskStatus(TaskStatus.IDLE));
+        const { todoListId, id } = task;
+        const payload: UpdateModel = {
+            title: task.title,
+            description: task.description,
+            completed: task.completed,
+            status: nextStatus,
+            priority: task.priority,
+            startDate: task.startDate,
+            deadline: task.deadline,
+        };
+        const data = { todoListId, id, payload };
+        await updateTask(data);
     };
 
-    const handleTitleChange = (nextTitle: string) => {
-        setTaskStatus(TaskStatus.CHANGING_TITLE);
-        dispatch(
-            updateTask({ task, newAttrValues: { title: nextTitle } }),
-        ).finally(() => setTaskStatus(TaskStatus.IDLE));
+    const handleTitleChange = async (nextTitle: string) => {
+        const { todoListId, id } = task;
+        const payload: UpdateModel = {
+            title: nextTitle,
+            description: task.description,
+            completed: task.completed,
+            status: task.status,
+            priority: task.priority,
+            startDate: task.startDate,
+            deadline: task.deadline,
+        };
+        const data = { todoListId, id, payload };
+        await updateTask(data);
     };
 
     const handleDeleteTask = async () => {
-        setTaskStatus(TaskStatus.DELETING);
-        dispatch(
-            tasksStatusChanged({
-                todolistId: todoListId,
-                nextTasksStatus: TasksStatus.DELETING_TASK,
-            }),
-        );
-        try {
-            await dispatch(removeTask({ taskId, todoListId })).unwrap();
-        } catch {
-            setTaskStatus(TaskStatus.IDLE);
-            dispatch(
-                tasksStatusChanged({
-                    todolistId: todoListId,
-                    nextTasksStatus: TasksStatus.IDLE,
-                }),
-            );
-            return;
-        }
-        try {
-            await dispatch(
-                fetchTasks({
-                    todolistId: todoListId,
-                    count: TASKS_PER_PAGE,
-                    page,
-                }),
-            );
-        } finally {
-            // Если таск был удален с сервера успешно, мне не важно как завершиться
-            // fetch запрос, мне надо удалить таск локально, но только после того,
-            // как завершится запрос, чтобы ui не дергался
-            dispatch(removeLocalTask(taskId));
-        }
-        setTaskStatus(TaskStatus.IDLE);
-        dispatch(
-            tasksStatusChanged({
-                todolistId: todoListId,
-                nextTasksStatus: TasksStatus.IDLE,
-            }),
-        );
+        setTaskStatus(TaskStatus.MODIFYING);
+        await removeTask({ taskId, todoListId });
     };
 
     const cx = bindClasses({ taskTitleDisabled: s.taskTitleDisabled });
     const className = cx(s.taskTitle, {
-        taskTitleDisabled: combinedCase || changingTaskTitle,
+        taskTitleDisabled: combinedCase,
     });
 
     return (
@@ -118,15 +91,16 @@ export const Task = (props: Props) => {
             }}
         >
             <Checkbox
-                disabled={combinedCase || changingTaskStatus}
+                disabled={combinedCase}
                 checked={status === TaskStatusCodes.Completed}
                 onChange={handleStatusChange}
             />
             <EditableSpan
                 spanText={title}
                 onEdit={handleTitleChange}
-                disabled={combinedCase || changingTaskTitle}
+                disabled={combinedCase}
                 navigateToLink={`/tasks/${taskId}`}
+                linkStateData={task.todoListId}
                 className={className}
             />
             <IconButton

@@ -12,9 +12,3 @@ export enum FilterValue {
     ACTIVE = 'active',
     COMPLETED = 'completed',
 }
-
-export enum TodolistStatus {
-    IDLE = 'idle',
-    UPDATING = 'updating',
-    DELETING = 'deleting',
-}
