@@ -10,14 +10,6 @@ export const Main = () => {
 
     const addTodo = (todolistTitle: string) => {
         addTodolist(todolistTitle);
-        // .unwrap()
-        // .then(() => {
-        //     dispatchAppStatusData(
-        //         dispatch,
-        //         AppStatus.SUCCEEDED,
-        //         'Todolist was successfully added',
-        //     );
-        // });
     };
 
     return (

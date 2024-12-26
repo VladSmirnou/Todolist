@@ -21,10 +21,7 @@ export enum ResultCode {
 
 export enum TodolistsStatus {
     IDLE = 'idle',
-    INITIAL_LOADING = 'initialLoading',
-    LOADING = 'loading',
-    SUCCESS = 'success',
-    FAILURE = 'failure',
+    ADDING_TODOLIST = 'addingTodolist',
 }
 
 export enum AppStatus {

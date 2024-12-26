@@ -10,12 +10,18 @@ export const tasksApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         fetchTasks: builder.query<
             TasksData,
-            { todolistId: string; count: number; page: number }
+            { todolistId: string; params?: { count: number; page: number } }
         >({
-            query: ({ todolistId, count, page }) => ({
+            query: ({ todolistId, params = {} }) => ({
                 url: `/todo-lists/${todolistId}/tasks`,
-                params: { count, page },
+                params,
             }),
+            providesTags: (res, _, { todolistId }) => {
+                if (res) {
+                    return [{ type: 'Tasks', id: todolistId }];
+                }
+                return [];
+            },
         }),
         addTask: builder.mutation<
             Response<NewTask>,
@@ -26,6 +32,12 @@ export const tasksApi = baseApi.injectEndpoints({
                 method: 'POST',
                 body: { title },
             }),
+            invalidatesTags: (res, _, { todolistId }) => {
+                if (res) {
+                    return [{ type: 'Tasks', id: todolistId }];
+                }
+                return [];
+            },
         }),
         removeTask: builder.mutation<
             Response,
@@ -35,6 +47,12 @@ export const tasksApi = baseApi.injectEndpoints({
                 url: `/todo-lists/${todoListId}/tasks/${taskId}`,
                 method: 'DELETE',
             }),
+            invalidatesTags: (res, _, { todoListId }) => {
+                if (res) {
+                    return [{ type: 'Tasks', id: todoListId }];
+                }
+                return [];
+            },
         }),
         updateTask: builder.mutation<
             Response<NewTask>,
@@ -49,6 +67,12 @@ export const tasksApi = baseApi.injectEndpoints({
                 method: 'PUT',
                 body: payload,
             }),
+            invalidatesTags: (res, _, { todoListId }) => {
+                if (res) {
+                    return [{ type: 'Tasks', id: todoListId }];
+                }
+                return [];
+            },
         }),
     }),
 });

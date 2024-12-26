@@ -13,10 +13,10 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { FilterButtons } from '../FilterButtons/FilterButtons';
 import { TasksPagination } from '../TasksPagination/TasksPagination';
-import { TaskSkeleton } from './Skeletons/Skeleton/Skeleton';
 import { TasksSkeletons } from './Skeletons/Skeletons';
 import { Task } from './Task/Task';
 import s from './Tasks.module.css';
+
 type Props = {
     disabled: boolean;
     todolistId: string;
@@ -30,12 +30,10 @@ export const Tasks = (props: Props) => {
     const {
         data: tasksData,
         isLoading,
-        isFetching,
         isSuccess,
     } = useFetchTasksQuery({
         todolistId,
-        count: TASKS_PER_PAGE,
-        page: paginationPage,
+        params: { count: TASKS_PER_PAGE, page: paginationPage },
     });
 
     const [addTask] = useAddTaskMutation();
@@ -62,6 +60,8 @@ export const Tasks = (props: Props) => {
     let pagination;
 
     if (isLoading) {
+        // Когда новый тудулист добалвяется, это будет всплывать постоянно,
+        // т.к. такой query еще небыло
         content = <TasksSkeletons />;
     } else if (isSuccess) {
         const { items: tasks, totalCount } = tasksData;
@@ -89,30 +89,18 @@ export const Tasks = (props: Props) => {
             );
         }
 
-        if (isFetching && finalTasks.length === TASKS_PER_PAGE) {
-            finalTasks = finalTasks.slice(0, TASKS_PER_PAGE - 1);
-        }
-
         const JSXTasks = finalTasks.map((task) => {
             return (
                 <Task
                     key={task.id}
+                    paginationPage={paginationPage}
                     task={task}
                     disabled={disabled}
-                    page={paginationPage}
                 />
             );
         });
-
         if (finalTasks.length > 0) {
-            content = (
-                <>
-                    {isFetching && <TaskSkeleton />}
-                    <ul className={s.tasksList}>{JSXTasks}</ul>
-                </>
-            );
-        } else if (isFetching) {
-            content = <TaskSkeleton />;
+            content = <ul className={s.tasksList}>{JSXTasks}</ul>;
         } else {
             content = (
                 <Typography>
@@ -126,7 +114,7 @@ export const Tasks = (props: Props) => {
         <>
             <AddItemForm
                 onAddItem={addTaskCallBack}
-                disabled={disabled || isFetching}
+                disabled={disabled}
                 placeholder={'Task title'}
             />
             <div className={s.container}>{content}</div>

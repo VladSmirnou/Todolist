@@ -1,6 +1,6 @@
 import { createListenerMiddleware, addListener } from '@reduxjs/toolkit';
 import type { RootState, AppDispatch } from './store';
-import { addAuthListeners } from '@/features/auth/model/authSlice';
+// import { addAuthListeners } from '@/features/auth/model/authSlice';
 
 export const listenerMiddleware = createListenerMiddleware();
 
@@ -13,4 +13,4 @@ export type AppStartListening = typeof startAppListening;
 export const addAppListener = addListener.withTypes<RootState, AppDispatch>();
 export type AppAddListener = typeof addAppListener;
 
-addAuthListeners(startAppListening);
+// addAuthListeners(startAppListening);

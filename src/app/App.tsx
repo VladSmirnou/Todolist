@@ -5,20 +5,23 @@ import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { useMeQuery } from '@/features/api/authApi';
 import { setIsLoggedIn } from '@/features/auth/model/authSlice';
 import CssBaseline from '@mui/material/CssBaseline';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 export const App = () => {
-    const { data, isLoading } = useMeQuery();
+    const { data: isUserHasToken } = useMeQuery();
     const dispatch = useAppDispatch();
 
-    useEffect(() => {
-        if (data !== undefined) {
-            dispatch(setIsLoggedIn(data));
-        }
-    }, [dispatch, data]);
+    const [meRequestIsFinished, setMeRequestIsFinished] = useState(false);
 
-    return !isLoading ?
+    useEffect(() => {
+        if (isUserHasToken !== undefined) {
+            dispatch(setIsLoggedIn(isUserHasToken));
+            setMeRequestIsFinished(true);
+        }
+    }, [dispatch, isUserHasToken]);
+
+    return meRequestIsFinished ?
             <>
                 <CssBaseline />
                 <Header />

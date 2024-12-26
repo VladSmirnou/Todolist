@@ -1,40 +1,45 @@
-import { useAppDispatch } from '@/common/hooks/useAppDispatch';
-import { useAppSelector } from '@/common/hooks/useAppSelector';
+import { PATH } from '@/app/router/routerConfig';
 import { TaskIdParams } from '@/common/types/types';
-import { selectById, updateTask } from '@/features/todolists/model/tasksSlice';
+import {
+    useFetchTasksQuery,
+    useUpdateTaskMutation,
+} from '@/features/api/tasksApi';
+import { UpdateModel } from '@/features/todolists/utils/types/todolist.types';
 import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import { ChangeEvent, FormEvent, useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
-import { Container } from '../Container/Container';
-import s from './EditTaskForm.module.css';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
+import TextField from '@mui/material/TextField';
+import { ChangeEvent, FormEvent, useState } from 'react';
+import {
+    Link,
+    Navigate,
+    useLocation,
+    useNavigate,
+    useParams,
+} from 'react-router-dom';
+import { Container } from '../Container/Container';
 import { TaskDoesntExist } from '../TaskDoesntExist/TaskDoesntExist';
-import { selectTodolistsStatus } from '@/features/todolists/model/todolistSlice';
+import s from './EditTaskForm.module.css';
 import { FormStatus } from './enum';
-import { TodolistsStatus } from '@/common/enums/enums';
-import { PATH } from '@/app/router/routerConfig';
 
-export const EditTaskForm = () => {
+type Props = {
+    todolistId: string;
+};
+
+const NavigatedFromSingleTaskPage = (props: Props) => {
+    const { todolistId } = props;
+
     const navigate = useNavigate();
-    const dispatch = useAppDispatch();
-
-    const todolistStatus = useAppSelector((state) =>
-        selectTodolistsStatus(state.todolistEntities),
-    );
-
     const { taskId } = useParams<TaskIdParams>();
 
-    const task = useAppSelector((state) => selectById(state, taskId!));
+    const { data: tasks } = useFetchTasksQuery({ todolistId });
+    const [updateTask] = useUpdateTaskMutation();
+
+    const task = tasks?.items.find((task) => task.id === taskId);
 
     const [title, setTitle] = useState(task?.title ?? '');
     const [error, setError] = useState<string | null>(null);
     const [status, setStatus] = useState<FormStatus>(FormStatus.IDLE);
-
-    if (todolistStatus === TodolistsStatus.INITIAL_LOADING) {
-        return <Navigate to={PATH.root} replace />;
-    }
 
     if (!task) {
         return <TaskDoesntExist />;
@@ -45,16 +50,37 @@ export const EditTaskForm = () => {
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (title === task.title) {
-            return navigate(`/tasks/${taskId}`, { replace: true });
+            return navigate(`/tasks/${taskId}`, {
+                state: task.todoListId,
+                replace: true,
+            });
         }
         if (!title.trim()) {
             setError('Title cannot be empty!');
         } else {
             setStatus(FormStatus.UPDATING);
-            dispatch(updateTask({ task, newAttrValues: { title } }))
+            const { todoListId, id } = task;
+            const payload: UpdateModel = {
+                title,
+                description: task.description,
+                completed: task.completed,
+                status: task.status,
+                priority: task.priority,
+                startDate: task.startDate,
+                deadline: task.deadline,
+            };
+            const data = { todoListId, id, payload };
+            updateTask(data)
                 .unwrap()
-                .then(() => navigate(`/tasks/${taskId}`, { replace: true }))
-                .finally(() => setStatus(FormStatus.IDLE));
+                .then(
+                    () => {
+                        navigate(`/tasks/${taskId}`, {
+                            state: task.todoListId,
+                            replace: true,
+                        });
+                    },
+                    () => setStatus(FormStatus.IDLE),
+                );
         }
     };
 
@@ -87,6 +113,7 @@ export const EditTaskForm = () => {
                             component={Link}
                             type="button"
                             to={`/tasks/${taskId}`}
+                            state={task.todoListId}
                             replace
                         >
                             close
@@ -96,4 +123,25 @@ export const EditTaskForm = () => {
             </Box>
         </Container>
     );
+};
+
+export const EditTaskForm = () => {
+    const location = useLocation();
+
+    const locationState = location.state as string | null;
+
+    // It seems like that 'location' is getting the state from the
+    // window.state, so setting 'location.state = null' will not
+    // restore it. Going back to this url directly will preserve
+    // state, but I don't want to allow it.
+    window.history.replaceState(null, '');
+
+    let content;
+    if (!locationState) {
+        content = <Navigate to={PATH.root} replace />;
+    } else {
+        content = <NavigatedFromSingleTaskPage todolistId={locationState} />;
+    }
+    location.state = null;
+    return content;
 };

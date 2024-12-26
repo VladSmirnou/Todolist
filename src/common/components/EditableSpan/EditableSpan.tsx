@@ -9,10 +9,18 @@ type Props = {
     onEdit: (newValue: string) => void;
     disabled?: boolean;
     navigateToLink?: string;
+    linkStateData?: unknown;
 } & TypographyProps;
 
 export const EditableSpan = (props: Props) => {
-    const { spanText, onEdit, disabled, navigateToLink, ...rest } = props;
+    const {
+        spanText,
+        onEdit,
+        disabled,
+        navigateToLink,
+        linkStateData,
+        ...rest
+    } = props;
 
     const navigate = useNavigate();
 
@@ -31,7 +39,7 @@ export const EditableSpan = (props: Props) => {
                     const clicks = clicksCount.current;
                     clicksCount.current = 0;
                     if (navigateToLink && clicks < 2) {
-                        navigate(navigateToLink);
+                        navigate(navigateToLink, { state: linkStateData });
                     }
                     if (clicks >= 2) {
                         setInputText(spanText);
