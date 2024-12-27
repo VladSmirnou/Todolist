@@ -1,9 +1,5 @@
-import {
-    NewTask,
-    TasksData,
-    UpdateModel,
-} from '../todolists/utils/types/todolist.types';
-import { baseApi } from './baseApi';
+import { baseApi } from '@/app/api/baseApi';
+import { TasksData, NewTask, UpdateModel } from '../utils/types/todolist.types';
 import { Response } from '@/common/types/types';
 
 export const tasksApi = baseApi.injectEndpoints({

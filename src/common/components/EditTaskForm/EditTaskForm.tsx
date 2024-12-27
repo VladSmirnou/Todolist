@@ -3,7 +3,7 @@ import { TaskIdParams } from '@/common/types/types';
 import {
     useFetchTasksQuery,
     useUpdateTaskMutation,
-} from '@/features/api/tasksApi';
+} from '@/features/todolists/api/tasksApi';
 import { UpdateModel } from '@/features/todolists/utils/types/todolist.types';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';

@@ -3,12 +3,9 @@ import { TaskStatusCodes } from '@/common/enums/enums';
 import {
     useRemoveTaskMutation,
     useUpdateTaskMutation,
-} from '@/features/api/tasksApi';
+} from '@/features/todolists/api/tasksApi';
 import { bindClasses } from '@/features/todolists/utils/moduleStyleBinder/moduleStyleBinder';
-import type {
-    Task as TaskType,
-    UpdateModel,
-} from '@/features/todolists/utils/types/todolist.types';
+import type { Task as TaskType } from '@/features/todolists/utils/types/todolist.types';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
@@ -24,6 +21,24 @@ type Props = {
     disabled: boolean;
     task: TaskType;
     paginationPage: number;
+};
+
+const getUpdateData = (
+    task: TaskType,
+    newAttrValues: { status?: number; title?: string },
+) => {
+    const { todoListId, id } = task;
+    const payload = {
+        title: task.title,
+        description: task.description,
+        completed: task.completed,
+        status: task.status,
+        priority: task.priority,
+        startDate: task.startDate,
+        deadline: task.deadline,
+        ...newAttrValues,
+    };
+    return { todoListId, id, payload };
 };
 
 export const Task = (props: Props) => {
@@ -43,38 +58,28 @@ export const Task = (props: Props) => {
     const handleStatusChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const nextStatus =
             e.target.checked ? TaskStatusCodes.Completed : TaskStatusCodes.New;
-        const { todoListId, id } = task;
-        const payload: UpdateModel = {
-            title: task.title,
-            description: task.description,
-            completed: task.completed,
+        const payload = getUpdateData(task, {
             status: nextStatus,
-            priority: task.priority,
-            startDate: task.startDate,
-            deadline: task.deadline,
-        };
-        const data = { todoListId, id, payload };
-        await updateTask(data);
+        });
+        await updateTask(payload);
     };
 
+    // refetch // forseRefetch // refetchOnMountOrArgChange
+
     const handleTitleChange = async (nextTitle: string) => {
-        const { todoListId, id } = task;
-        const payload: UpdateModel = {
+        const payload = getUpdateData(task, {
             title: nextTitle,
-            description: task.description,
-            completed: task.completed,
-            status: task.status,
-            priority: task.priority,
-            startDate: task.startDate,
-            deadline: task.deadline,
-        };
-        const data = { todoListId, id, payload };
-        await updateTask(data);
+        });
+        await updateTask(payload);
     };
 
     const handleDeleteTask = async () => {
         setTaskStatus(TaskStatus.MODIFYING);
-        await removeTask({ taskId, todoListId });
+        try {
+            await removeTask({ taskId, todoListId }).unwrap();
+        } catch {
+            setTaskStatus(TaskStatus.IDLE);
+        }
     };
 
     const cx = bindClasses({ taskTitleDisabled: s.taskTitleDisabled });

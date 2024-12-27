@@ -1,9 +1,6 @@
 import type { Response } from '@/common/types/types';
-import type {
-    NewTodolist,
-    Todolist,
-} from '../todolists/utils/types/todolist.types';
-import { baseApi } from './baseApi';
+import { baseApi } from '@/app/api/baseApi';
+import { Todolist, NewTodolist } from '../utils/types/todolist.types';
 
 export const todolistsApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
@@ -17,14 +14,20 @@ export const todolistsApi = baseApi.injectEndpoints({
                 method: 'POST',
                 body: { title },
             }),
-            invalidatesTags: ['Todolists'],
+            invalidatesTags: (res, err) => {
+                if (err) return [];
+                return ['Todolists'];
+            },
         }),
         removeTodolist: builder.mutation<Response, string>({
             query: (todolistId) => ({
                 url: `/todo-lists/${todolistId}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['Todolists'],
+            invalidatesTags: (res, err) => {
+                if (err) return [];
+                return ['Todolists'];
+            },
         }),
         updateTodolist: builder.mutation<
             Response,
@@ -35,7 +38,10 @@ export const todolistsApi = baseApi.injectEndpoints({
                 method: 'PUT',
                 body: { title },
             }),
-            invalidatesTags: ['Todolists'],
+            invalidatesTags: (res, err) => {
+                if (err) return [];
+                return ['Todolists'];
+            },
         }),
     }),
 });

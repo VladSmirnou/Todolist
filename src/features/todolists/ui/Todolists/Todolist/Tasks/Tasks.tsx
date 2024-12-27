@@ -3,7 +3,7 @@ import { TaskStatusCodes } from '@/common/enums/enums';
 import {
     useAddTaskMutation,
     useFetchTasksQuery,
-} from '@/features/api/tasksApi';
+} from '@/features/todolists/api/tasksApi';
 import {
     INITIAL_PAGE,
     TASKS_PER_PAGE,

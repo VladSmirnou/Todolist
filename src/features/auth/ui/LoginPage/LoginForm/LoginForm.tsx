@@ -1,9 +1,11 @@
-import { appStatusChanged, selectAppStatus } from '@/app/appSlice';
+import type { AppDispatch } from '@/app/store';
 import { AUTH_TOKEN_KEY } from '@/common/constants/constants';
-import { AppStatus } from '@/common/enums/enums';
+import { AppStatus, ResultCode } from '@/common/enums/enums';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
-import { useAppSelector } from '@/common/hooks/useAppSelector';
-import { LoginFormData } from '@/common/types/types';
+import type { LoginFormData, Response } from '@/common/types/types';
+import { dispatchAppStatusData } from '@/common/utils/dispatchAppStatusData';
+import { handleReduxQueryError } from '@/common/utils/handleReduxQueryError';
+import { useLoginMutation } from '@/features/auth/api/authApi';
 import { setIsLoggedIn } from '@/features/auth/model/authSlice';
 import { FormControl } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -11,9 +13,10 @@ import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import TextField from '@mui/material/TextField';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { SerializedError } from '@reduxjs/toolkit';
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { SubmitHandler, useForm, UseFormSetError } from 'react-hook-form';
 import s from './LoginForm.module.css';
-import { useLoginMutation } from '@/features/api/authApi';
 
 const defaultValues = {
     email: '',
@@ -26,6 +29,39 @@ const required = {
     message: 'This field is required',
 };
 
+const handleLoginFulfilled = (
+    result: Response<{
+        token: string;
+        userId: number;
+    }>,
+    dispatch: AppDispatch,
+    setError: UseFormSetError<LoginFormData>,
+) => {
+    if (result.resultCode !== ResultCode.Success) {
+        if (result.fieldsErrors.length) {
+            // Насколько я понял, в Redux Query просто нету альтернативы
+            // rejectWithValue, поэтому я просто не могу вернуть
+            // result.fieldsErrors в хэндлер. Query оборачивает тригеры,
+            // и я больше не могу вернуть значение из middleware или
+            // enchancer-a над dispatch напрямую, оно просто игнорируется.
+            result.fieldsErrors.forEach(({ field, error }) => {
+                setError(field as keyof LoginFormData, {
+                    type: 'custom',
+                    message: error,
+                });
+            });
+        } else {
+            const errorMessage = result.messages[0];
+            dispatchAppStatusData(dispatch, AppStatus.FAILED, errorMessage);
+        }
+        return false;
+    } else {
+        localStorage.setItem(AUTH_TOKEN_KEY, result.data.token);
+        dispatch(setIsLoggedIn(true));
+        return true;
+    }
+};
+
 export const LoginForm = () => {
     const dispatch = useAppDispatch();
     const [login, { isLoading }] = useLoginMutation();
@@ -35,25 +71,26 @@ export const LoginForm = () => {
         handleSubmit,
         formState: { errors, isValid, isDirty },
         setError,
+        reset,
     } = useForm<LoginFormData>({ defaultValues });
 
     const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
-        const result = await login(data).unwrap();
-        localStorage.setItem(AUTH_TOKEN_KEY, result.data.token);
-        dispatch(setIsLoggedIn(true));
-        //     .unwrap()
-        //     .catch(
-        //         (
-        //             err: Array<{
-        //                 field: keyof LoginFormData;
-        //                 error: string;
-        //             }>,
-        //         ) => {
-        //             err.forEach(({ field, error }) => {
-        //                 setError(field, { type: 'custom', message: error });
-        //             });
-        //         },
-        //     );
+        try {
+            const result = await login(data).unwrap();
+            const noServerError = handleLoginFulfilled(
+                result,
+                dispatch,
+                setError,
+            );
+            if (noServerError) {
+                reset();
+            }
+        } catch (e) {
+            handleReduxQueryError(
+                dispatch,
+                e as FetchBaseQueryError | SerializedError,
+            );
+        }
     };
 
     return (

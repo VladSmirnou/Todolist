@@ -1,4 +1,4 @@
-import { baseApi } from './baseApi';
+import { baseApi } from '@/app/api/baseApi';
 import { ResultCode } from '@/common/enums/enums';
 import type { LoginFormData, Response } from '@/common/types/types';
 

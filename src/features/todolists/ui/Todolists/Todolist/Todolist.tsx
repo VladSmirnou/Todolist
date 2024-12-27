@@ -1,14 +1,14 @@
+import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import {
     todolistsApi,
     useRemoveTodolistMutation,
     useUpdateTodolistMutation,
-} from '@/features/api/todolistsApi';
+} from '@/features/todolists/api/todolistsApi';
 import type { Todolist as TodolistType } from '@/features/todolists/utils/types/todolist.types';
 import Paper from '@mui/material/Paper';
 import { useState } from 'react';
 import { Tasks } from './Tasks/Tasks';
 import { TodolistTitle } from './TodolistTitle/TodolistTitle';
-import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 
 type Props = {
     todolist: TodolistType;
@@ -30,29 +30,32 @@ export const Todolist = (props: Props) => {
     const [todolistStatus, setTodolistStatus] = useState(TodolistStatus.IDLE);
 
     const [removeTodolist] = useRemoveTodolistMutation();
+
     const [updateTodolist] = useUpdateTodolistMutation();
 
     const deleteTodo = async () => {
         setTodolistStatus(TodolistStatus.DELETING);
-        await removeTodolist(todolistId);
-        dispatch(todolistsApi.endpoints.fetchTodolists.initiate())
-            .unwrap()
-            .then(
-                () => {},
-                () => {
-                    setTodolistStatus(TodolistStatus.IDLE);
-                },
-            );
+        try {
+            await removeTodolist(todolistId).unwrap();
+        } catch {
+            setTodolistStatus(TodolistStatus.IDLE);
+            return;
+        }
+        await dispatch(todolistsApi.endpoints.fetchTodolists.initiate());
     };
 
     const updateTodo = async (title: string) => {
         setTodolistStatus(TodolistStatus.UPDATING);
-        await updateTodolist({ todolistId, title });
-        dispatch(todolistsApi.endpoints.fetchTodolists.initiate())
-            .unwrap()
-            .then(() => {
-                setTodolistStatus(TodolistStatus.IDLE);
-            });
+        try {
+            await updateTodolist({ todolistId, title }).unwrap();
+        } catch {
+            setTodolistStatus(TodolistStatus.IDLE);
+            return;
+        }
+        await dispatch(
+            todolistsApi.endpoints.fetchTodolists.initiate(),
+        ).unwrap();
+        setTodolistStatus(TodolistStatus.IDLE);
     };
 
     const deletingTodolist = todolistStatus === TodolistStatus.DELETING;

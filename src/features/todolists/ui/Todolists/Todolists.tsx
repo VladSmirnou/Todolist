@@ -1,5 +1,5 @@
-import { useFetchTodolistsQuery } from '@/features/api/todolistsApi';
 import Typography from '@mui/material/Typography';
+import { useFetchTodolistsQuery } from '../../api/todolistsApi';
 import { TodolistsSkeletons } from './Skeletons/Skeletons';
 import { Todolist } from './Todolist/Todolist';
 import s from './Todolists.module.css';

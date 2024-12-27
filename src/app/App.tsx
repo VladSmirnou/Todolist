@@ -2,7 +2,7 @@ import { CicrularLoader } from '@/common/components/CircularProgress/CircularPro
 import { Header } from '@/common/components/Header/Header';
 import { MessagePopup } from '@/common/components/MessagePopup/MessagePopup';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
-import { useMeQuery } from '@/features/api/authApi';
+import { useMeQuery } from '@/features/auth/api/authApi';
 import { setIsLoggedIn } from '@/features/auth/model/authSlice';
 import CssBaseline from '@mui/material/CssBaseline';
 import { useEffect, useState } from 'react';

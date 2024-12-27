@@ -1,8 +1,11 @@
 import { PATH } from '@/app/router/routerConfig';
 import { useAppDispatch } from '@/common/hooks/useAppDispatch';
 import { TaskIdParams } from '@/common/types/types';
-import { tasksApi, useFetchTasksQuery } from '@/features/api/tasksApi';
-import { todolistsApi } from '@/features/api/todolistsApi';
+import {
+    tasksApi,
+    useFetchTasksQuery,
+} from '@/features/todolists/api/tasksApi';
+import { todolistsApi } from '@/features/todolists/api/todolistsApi';
 import { Task } from '@/features/todolists/utils/types/todolist.types';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
